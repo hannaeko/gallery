@@ -1,24 +1,19 @@
 use env_logger;
 
 use actix_web::middleware::Logger;
-use actix_web::{server, App, HttpRequest, http::NormalizePath, Result, Responder};
+use actix_web::{server, App, http::NormalizePath};
 
 mod models;
-mod gallery;
-mod config;
 mod utils;
+mod gallery_routes;
+mod config;
 
-fn gallery_handler(req: &HttpRequest) -> Result<impl Responder> {
-    let album_path = utils::get_album_canonical_path(req.match_info().query("path")?);
-    let album: models::Album = gallery::get_album_content(album_path)?;
-    Ok(album)
-}
 
 fn create_app() -> App {
     App::new()
         .middleware(Logger::new("\"%r\" %Dms %s"))
+        .resource("/{path:.*}", |r| r.f(gallery_routes::gallery_route))
         .default_resource(|r| r.h(NormalizePath::default()))
-        .resource("/gallery/{path:.*}", |r| r.f(gallery_handler))
 }
 
 fn main() {
