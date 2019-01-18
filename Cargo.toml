@@ -1,0 +1,9 @@
+[package]
+name = "gallery"
+version = "0.1.0"
+authors = ["BlackSponge <blacksponge@tuta.io>"]
+edition = "2018"
+
+[dependencies]
+actix-web = "0.7"
+env_logger = "0.6.0"
