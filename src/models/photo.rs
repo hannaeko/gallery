@@ -1,20 +1,20 @@
 use std::io;
 use std::path::PathBuf;
 
+use super::helper::ExifExtractor;
+
 use actix_web::{Responder, HttpRequest, HttpResponse, Error};
+use exif::Tag;
 
 #[derive(Debug)]
 pub struct Photo {
-    name: String
+    name: String,
+    creation_date: String,
+    flash: String,
+    exposure_time: String,
 }
 
 impl Photo {
-    pub fn new(name: String) -> Self {
-        Photo {
-            name,
-        }
-    }
-
     pub fn from_path(path: PathBuf) -> io::Result<Self> {
         let name = path.file_name()
             .unwrap()
@@ -22,8 +22,23 @@ impl Photo {
             .into_string()
             .unwrap();
 
-        Ok(Photo::new(name))
+        let exif_map = Self::extract_exif(path)?;
+
+        Ok(Photo {
+            name,
+            creation_date: exif_map[&Tag::DateTimeOriginal].to_owned(),
+            flash: exif_map[&Tag::Flash].to_owned(),
+            exposure_time: exif_map[&Tag::ExposureTime].to_owned(),
+        })
     }
+}
+
+impl ExifExtractor for Photo {
+    const TAG_LIST: &'static [Tag] = &[
+        Tag::DateTimeOriginal,
+        Tag::Flash,
+        Tag::ExposureTime,
+    ];
 }
 
 impl Responder for Photo {
