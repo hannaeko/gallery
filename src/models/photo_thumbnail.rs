@@ -3,8 +3,9 @@ use std::fs;
 use std::path::PathBuf;
 
 use exif::Tag;
-use image::ImageOutputFormat;
 use crate::utils::get_thumbnail_path;
+
+use image::GenericImageView;
 
 use super::helper::ExifExtractor;
 
@@ -30,15 +31,27 @@ impl PhotoThumbnail {
         })
     }
 
-    pub fn get_image(path: PathBuf, size: u32) -> io::Result<PathBuf> {
+    pub fn get_image(path: PathBuf, size: u32, square: bool) -> io::Result<PathBuf> {
         let thumbnail_path = get_thumbnail_path(&path);
-
         if !thumbnail_path.exists() {
             let img = image::open(&path)
                 .map_err(|_| io::Error::new(io::ErrorKind::NotFound, "Enable to build thumbnail"))?;
+            let (width, height) = img.dimensions();
 
-            let thumbnail = img.thumbnail(size, size);
-            fs::create_dir_all(thumbnail_path.parent().unwrap());
+            let ratio = std::cmp::max(height, width) as f32 / std::cmp::min(height, width) as f32;
+            let nsize = (ratio * size as f32) as u32;
+
+            let mut thumbnail = img.resize(nsize, nsize, image::FilterType::Gaussian);
+
+            if square {
+                let (nwidth, nheight) = thumbnail.dimensions();
+                let x = nwidth / 2 - size / 2;
+                let y = nheight / 2 - size / 2;
+
+                thumbnail = thumbnail.crop(x, y, size, size);
+            }
+
+            fs::create_dir_all(thumbnail_path.parent().unwrap())?;
             thumbnail.save(&thumbnail_path)?;
         }
 
