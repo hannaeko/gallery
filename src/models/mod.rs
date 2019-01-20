@@ -6,5 +6,5 @@ mod helper;
 
 pub use photo::Photo;
 pub use album::Album;
-pub use photo_thumbnail::PhotoThumbnail;
+pub use photo_thumbnail::{PhotoThumbnail, ThumbnailSize};
 pub use album_thumbnail::AlbumThumbnail;

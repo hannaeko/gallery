@@ -1,6 +1,7 @@
 pub struct ThumbnailConfig {
     pub size: u32,
     pub square: bool,
+    pub extension: &'static str,
 }
 
 pub struct Config {
@@ -22,7 +23,8 @@ impl Config {
 
             small_thumbnail: ThumbnailConfig {
                 size: 250,
-                square: true
+                square: true,
+                extension: "small.jpeg",
             },
         }
     }

@@ -1,7 +1,7 @@
 use actix_web::{HttpRequest, Result, Either, fs::NamedFile};
 
 use crate::utils::*;
-use crate::models::{Album, Photo, PhotoThumbnail};
+use crate::models::{Album, Photo, PhotoThumbnail, ThumbnailSize};
 use crate::config::Config;
 
 
@@ -20,8 +20,7 @@ pub fn small_thumbnail_route(req: &HttpRequest<Config>) -> Result<NamedFile> {
 
     Ok(NamedFile::open(PhotoThumbnail::get_image(
         path,
-        config.small_thumbnail.size,
-        config.small_thumbnail.square,
+        ThumbnailSize::Small,
         config
     )?)?)
 }

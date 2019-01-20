@@ -4,7 +4,7 @@ use std::path::PathBuf;
 
 use exif::Tag;
 use crate::utils::get_thumbnail_path;
-use crate::config::Config;
+use crate::config::{Config, ThumbnailConfig};
 
 use image::GenericImageView;
 
@@ -32,8 +32,10 @@ impl PhotoThumbnail {
         })
     }
 
-    pub fn get_image(path: PathBuf, size: u32, square: bool, config: &Config) -> io::Result<PathBuf> {
-        let thumbnail_path = get_thumbnail_path(&path, &config);
+    pub fn get_image(path: PathBuf, thumbnail_size: ThumbnailSize, config: &Config) -> io::Result<PathBuf> {
+        let ThumbnailConfig { size, square, extension } = *thumbnail_size.get_thumbnail_config(config);
+
+        let thumbnail_path = get_thumbnail_path(&path, extension, &config);
 
         if !thumbnail_path.exists() {
             let img = image::open(&path)
@@ -66,4 +68,17 @@ impl ExifExtractor for PhotoThumbnail {
     const TAG_LIST: &'static [Tag] = &[
         Tag::DateTimeOriginal
     ];
+}
+
+
+pub enum ThumbnailSize {
+    Small,
+}
+
+impl ThumbnailSize {
+    pub fn get_thumbnail_config<'a>(&self, config: &'a Config) -> &'a ThumbnailConfig {
+        match self {
+            ThumbnailSize::Small => &config.small_thumbnail,
+        }
+    }
 }
