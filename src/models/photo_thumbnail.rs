@@ -4,6 +4,7 @@ use std::path::PathBuf;
 
 use exif::Tag;
 use crate::utils::get_thumbnail_path;
+use crate::config::Config;
 
 use image::GenericImageView;
 
@@ -31,8 +32,9 @@ impl PhotoThumbnail {
         })
     }
 
-    pub fn get_image(path: PathBuf, size: u32, square: bool) -> io::Result<PathBuf> {
-        let thumbnail_path = get_thumbnail_path(&path);
+    pub fn get_image(path: PathBuf, size: u32, square: bool, config: &Config) -> io::Result<PathBuf> {
+        let thumbnail_path = get_thumbnail_path(&path, &config);
+
         if !thumbnail_path.exists() {
             let img = image::open(&path)
                 .map_err(|_| io::Error::new(io::ErrorKind::NotFound, "Enable to build thumbnail"))?;
@@ -45,8 +47,9 @@ impl PhotoThumbnail {
 
             if square {
                 let (nwidth, nheight) = thumbnail.dimensions();
-                let x = nwidth / 2 - size / 2;
-                let y = nheight / 2 - size / 2;
+
+                let x = if size > nwidth { 0 } else { nwidth / 2 - size / 2 };
+                let y = if size > nheight { 0 } else { nheight / 2 - size / 2 };
 
                 thumbnail = thumbnail.crop(x, y, size, size);
             }
