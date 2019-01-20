@@ -5,14 +5,15 @@ use actix_web::{server, App, http::NormalizePath};
 
 mod models;
 mod utils;
-mod gallery_routes;
+mod routes;
 mod config;
 
 
 fn create_app() -> App {
     App::new()
         .middleware(Logger::new("\"%r\" %Dms %s"))
-        .resource("/{path:.*}", |r| r.f(gallery_routes::gallery_route))
+        .resource("/{path:.*}/small", |r| r.f(routes::small_thumbnail_route))
+        .resource("/{path:.*}", |r| r.f(routes::gallery_route))
         .default_resource(|r| r.h(NormalizePath::default()))
 }
 

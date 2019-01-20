@@ -50,6 +50,6 @@ impl Responder for Album {
     type Error = Error;
 
     fn respond_to<S>(self, _req: &HttpRequest<S>) -> Result<Self::Item, Self::Error> {
-        Ok(HttpResponse::Ok().content_type("text/plain").body(format!{"{:?}", self}))
+        Ok(HttpResponse::Ok().content_type("text/plain").body(format!{"{:#?}", self}))
     }
 }

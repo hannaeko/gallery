@@ -1,7 +1,10 @@
 use std::io;
+use std::fs;
 use std::path::PathBuf;
 
 use exif::Tag;
+use image::ImageOutputFormat;
+use crate::utils::get_thumbnail_path;
 
 use super::helper::ExifExtractor;
 
@@ -25,6 +28,21 @@ impl PhotoThumbnail {
             name,
             creation_date: exif_map[&Tag::DateTimeOriginal].to_owned()
         })
+    }
+
+    pub fn get_image(path: PathBuf, size: u32) -> io::Result<PathBuf> {
+        let thumbnail_path = get_thumbnail_path(&path);
+
+        if !thumbnail_path.exists() {
+            let img = image::open(&path)
+                .map_err(|_| io::Error::new(io::ErrorKind::NotFound, "Enable to build thumbnail"))?;
+
+            let thumbnail = img.thumbnail(size, size);
+            fs::create_dir_all(thumbnail_path.parent().unwrap());
+            thumbnail.save(&thumbnail_path)?;
+        }
+
+        Ok(thumbnail_path)
     }
 }
 
