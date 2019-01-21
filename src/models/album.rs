@@ -1,9 +1,9 @@
-use std::io;
 use std::fs;
 use std::path::PathBuf;
 
 use crate::models::*;
 use crate::config::Config;
+use crate::error::GalleryError;
 
 use actix_web::{Responder, HttpRequest, HttpResponse, Error};
 
@@ -23,7 +23,7 @@ impl Album {
         }
     }
 
-    pub fn from_path(path: PathBuf, config: &Config) -> io::Result<Self> {
+    pub fn from_path(path: PathBuf, config: &Config) -> Result<Self, GalleryError> {
         let name = if let Some(file_name) = path.file_name() {
             file_name.to_os_string().into_string().unwrap()
         } else {

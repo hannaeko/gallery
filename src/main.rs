@@ -1,5 +1,3 @@
-#[macro_use] extern crate failure;
-
 use env_logger;
 
 use actix_web::middleware::Logger;
