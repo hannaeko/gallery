@@ -1,3 +1,5 @@
+#[macro_use] extern crate failure;
+
 use env_logger;
 
 use actix_web::middleware::Logger;
@@ -7,6 +9,7 @@ mod models;
 mod utils;
 mod routes;
 mod config;
+mod error;
 
 use config::Config;
 

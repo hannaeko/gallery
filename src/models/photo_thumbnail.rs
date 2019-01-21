@@ -1,10 +1,10 @@
-use std::io;
 use std::fs;
 use std::path::PathBuf;
 
 use exif::Tag;
 use crate::utils::get_thumbnail_path;
 use crate::config::{Config, ThumbnailConfig};
+use crate::error::GalleryError;
 
 use image::GenericImageView;
 
@@ -17,7 +17,7 @@ pub struct PhotoThumbnail {
 }
 
 impl PhotoThumbnail {
-    pub fn from_path(path: PathBuf) -> io::Result<Self> {
+    pub fn from_path(path: PathBuf) -> Result<Self, GalleryError> {
         let name = path.file_name()
             .unwrap()
             .to_os_string()
@@ -32,14 +32,13 @@ impl PhotoThumbnail {
         })
     }
 
-    pub fn get_image(path: PathBuf, thumbnail_size: ThumbnailSize, config: &Config) -> io::Result<PathBuf> {
+    pub fn get_image(path: PathBuf, thumbnail_size: ThumbnailSize, config: &Config) -> Result<PathBuf, GalleryError> {
         let ThumbnailConfig { size, square, extension } = *thumbnail_size.get_thumbnail_config(config);
 
         let thumbnail_path = get_thumbnail_path(&path, extension, &config);
 
         if !thumbnail_path.exists() {
-            let img = image::open(&path)
-                .map_err(|_| io::Error::new(io::ErrorKind::NotFound, "Enable to build thumbnail"))?;
+            let img = image::open(&path)?;
             let (width, height) = img.dimensions();
 
             let ratio = std::cmp::max(height, width) as f32 / std::cmp::min(height, width) as f32;
@@ -50,8 +49,8 @@ impl PhotoThumbnail {
             if square {
                 let (nwidth, nheight) = thumbnail.dimensions();
 
-                let x = if size > nwidth { 0 } else { nwidth / 2 - size / 2 };
-                let y = if size > nheight { 0 } else { nheight / 2 - size / 2 };
+                let x = if size > nwidth { 0 } else { (nwidth - size) / 2 };
+                let y = if size > nheight { 0 } else { (nheight - size) / 2 };
 
                 thumbnail = thumbnail.crop(x, y, size, size);
             }
