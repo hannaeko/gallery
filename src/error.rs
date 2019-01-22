@@ -11,6 +11,8 @@ pub enum GalleryError {
     NotFound,
     #[fail(display="Error processing image, {}", _0)]
     ImageError(ImageError),
+    #[fail(display="Error processing a file with an invalid file_name")]
+    InvalidFileName,
     #[fail(display="{}", _0)]
     InternalError(Box<Fail>)
 }
@@ -39,5 +41,11 @@ impl From<ImageError> for GalleryError {
             ImageError::IoError(io_err) => GalleryError::from(io_err),
             err => GalleryError::ImageError(err)
         }
+    }
+}
+
+impl From<std::path::StripPrefixError> for GalleryError {
+    fn from(_error: std::path::StripPrefixError) -> Self {
+        GalleryError::InvalidFileName
     }
 }

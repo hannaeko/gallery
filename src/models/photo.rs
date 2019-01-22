@@ -1,9 +1,9 @@
-use std::io;
 use std::fs;
 use std::path::PathBuf;
 
 use super::helper::ExifExtractor;
 use crate::config::Config;
+use crate::error::GalleryError;
 
 use actix_web::{Responder, HttpRequest, HttpResponse, Error};
 use exif::Tag;
@@ -20,12 +20,12 @@ pub struct Photo {
 }
 
 impl Photo {
-    pub fn from_path(path: PathBuf, config: &Config) -> io::Result<Self> {
+    pub fn from_path(path: PathBuf, config: &Config) -> Result<Self, GalleryError> {
         let name = path.file_name()
-            .unwrap()
+            .ok_or(GalleryError::InvalidFileName)?
             .to_os_string()
             .into_string()
-            .unwrap();
+            .map_err(|_| GalleryError::InvalidFileName)?;
 
 
         let full_album_path = path.parent().unwrap();
@@ -48,7 +48,7 @@ impl Photo {
         }
 
         let next_photo = iter_names.next().map(|v| v.to_string());
-        let album_path = PathBuf::from("/").join(full_album_path.strip_prefix(config.storage_path).unwrap());
+        let album_path = PathBuf::from("/").join(full_album_path.strip_prefix(config.storage_path)?);
 
         let exif_map = Self::extract_exif(&path)?;
         Ok(Photo {
