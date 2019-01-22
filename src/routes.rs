@@ -10,7 +10,7 @@ pub fn gallery_route(req: &HttpRequest<Config>) -> Result<Either<Album, Photo>> 
     if is_path_album(&path) {
         Ok(Either::A(Album::from_path(path, req.state())?))
     } else {
-        Ok(Either::B(Photo::from_path(path)?))
+        Ok(Either::B(Photo::from_path(path, req.state())?))
     }
 }
 
