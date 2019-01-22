@@ -1,0 +1,31 @@
+.card {
+  height: 200px;
+  width: 200px;
+  margin: 2rem 0 0 2rem;
+  border: 1px solid #a5a5a5;
+  background-size: cover;
+  position: relative;
+  color: white;
+}
+
+.card .mask {
+  background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.8) 100%);
+  display: inline-block;
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.card h2 {
+  font-size: 1.1rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card .info {
+  margin-top: 60%;
+  padding: 0 5px;
+}

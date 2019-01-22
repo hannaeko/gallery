@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block head %}
+  <link rel="stylesheet" href="/static/photo.css">
+{% endblock %}
+
+{% block main %}
+  <img src="{{album_path}}/{{name}}/medium">
+{% endblock %}
