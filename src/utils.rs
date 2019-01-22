@@ -7,8 +7,8 @@ pub fn get_album_canonical_path(album_path: PathBuf, config: &Config) -> PathBuf
     canonical_path
 }
 
-pub fn is_path_album(path: &PathBuf) -> bool {
-    path.is_dir()
+pub fn is_path_album(path: &PathBuf, config: &Config) -> bool {
+    get_album_canonical_path(path.to_path_buf(), config).is_dir()
 }
 
 pub fn get_thumbnail_path(photo_path: &PathBuf, extension: &str, config: &Config) -> PathBuf {

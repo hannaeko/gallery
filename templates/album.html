@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+    <link rel="stylesheet" href="/static/main.css">
+  </head>
+  <body>
+    <header>
+      <nav>
+        <ul>
+          <li><h1>{{ name }}</h1></li>
+        </ul>
+      </nav>
+    </header>
+    <main>
+      {% for album in albums %}
+        <a href="{{ album.name }}">
+          <div class="card album">
+            <h2>{{ album.name }}</h2>
+          </div>
+        </a>
+      {% endfor %}
+      {% for photo in photos %}
+        <a href="{{ photo.name }}">
+          <div class="card photo" style="background-image: url('{{ album_path }}/{{ photo.name }}/small')">
+            <h2>{{ photo.name }}</h2>
+            <time datetime="{{ photo.creation_date }}">{{ photo.creation_date }}</time>
+          </div>
+        </a>
+      {% endfor %}
+    </main>
+  </body>
+</html>

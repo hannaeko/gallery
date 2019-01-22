@@ -1,8 +1,9 @@
 use std::fs;
 use std::path::PathBuf;
 
-use super::helper::ExifExtractor;
+use crate::models::helper::ExifExtractor;
 use crate::config::Config;
+use crate::utils;
 use crate::error::GalleryError;
 
 use actix_web::{Responder, HttpRequest, HttpResponse, Error};
@@ -28,8 +29,10 @@ impl Photo {
             .map_err(|_| GalleryError::InvalidFileName)?;
 
 
-        let full_album_path = path.parent().unwrap();
-        let mut names: Vec<_> = fs::read_dir(full_album_path)?
+        let album_path = PathBuf::from("/").join(path.parent().unwrap());
+        let full_path = utils::get_album_canonical_path(path, config);
+
+        let mut names: Vec<_> = fs::read_dir(full_path.parent().unwrap())?
             .filter_map(|entry| entry.ok())
             .filter(|entry| entry.path().is_file())
             .filter_map(|file| file.file_name().into_string().ok())
@@ -48,9 +51,8 @@ impl Photo {
         }
 
         let next_photo = iter_names.next().map(|v| v.to_string());
-        let album_path = PathBuf::from("/").join(full_album_path.strip_prefix(config.storage_path)?);
 
-        let exif_map = Self::extract_exif(&path)?;
+        let exif_map = Self::extract_exif(&full_path)?;
         Ok(Photo {
             name,
             album_path,

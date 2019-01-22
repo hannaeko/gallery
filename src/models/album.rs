@@ -2,27 +2,23 @@ use std::fs;
 use std::path::PathBuf;
 
 use crate::models::*;
+use crate::utils;
 use crate::config::Config;
 use crate::error::GalleryError;
 
+use askama::Template;
 use actix_web::{Responder, HttpRequest, HttpResponse, Error};
 
-#[derive(Debug)]
+#[derive(Debug, Template)]
+#[template(path = "album.html")]
 pub struct Album {
     name: String,
+    album_path: String,
     albums: Vec<AlbumThumbnail>,
     photos: Vec<PhotoThumbnail>
 }
 
 impl Album {
-    pub fn new(name: String) -> Self {
-        Album {
-            name,
-            albums: Vec::new(),
-            photos: Vec::new(),
-        }
-    }
-
     pub fn from_path(path: PathBuf, config: &Config) -> Result<Self, GalleryError> {
         let name = if let Some(file_name) = path.file_name() {
             file_name.to_os_string().into_string().unwrap()
@@ -30,21 +26,30 @@ impl Album {
             String::from(config.gallery_name)
         };
 
-        let mut album = Album::new(name);
+        let album_path = PathBuf::from("/").join(&path).to_str().unwrap().to_string();
+        let full_album_path = utils::get_album_canonical_path(path, config);
 
-        for entry in fs::read_dir(path)? {
+        let mut albums = Vec::new();
+        let mut photos = Vec::new();
+
+        for entry in fs::read_dir(full_album_path)? {
             let sub_path = entry?.path();
             if sub_path.is_dir() {
-                album.albums.push(AlbumThumbnail::from_path(sub_path)?);
+                albums.push(AlbumThumbnail::from_path(sub_path)?);
             } else if sub_path.is_file() {
-                album.photos.push(PhotoThumbnail::from_path(sub_path)?);
+                photos.push(PhotoThumbnail::from_path(sub_path)?);
             }
         }
 
-        album.albums.sort_by(|a, b| a.name.cmp(&b.name));
-        album.photos.sort_by(|a, b| a.name.cmp(&b.name));
+        albums.sort_by(|a, b| a.name.cmp(&b.name));
+        photos.sort_by(|a, b| a.name.cmp(&b.name));
 
-        Ok(album)
+        Ok(Album {
+            name,
+            album_path,
+            albums,
+            photos,
+        })
     }
 }
 
@@ -53,6 +58,7 @@ impl Responder for Album {
     type Error = Error;
 
     fn respond_to<S>(self, _req: &HttpRequest<S>) -> Result<Self::Item, Self::Error> {
-        Ok(HttpResponse::Ok().content_type("text/plain").body(format!{"{:#?}", self}))
+        let body = self.render().unwrap();
+        Ok(HttpResponse::Ok().content_type("text/html").body(body))
     }
 }

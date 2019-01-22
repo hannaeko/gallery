@@ -1,0 +1,56 @@
+html, body {
+  margin: 0;
+  padding: 0;
+}
+header {
+  padding: 0.5em 0;
+  border-bottom: 2px solid #a5a5a5;
+}
+header nav ul {
+  padding: 0 0 0 2rem;
+  margin: 0;
+  list-style: none;
+}
+
+header nav ul li {
+  display: inline-block;
+}
+
+header nav ul li:first-of-type::before {
+  content: none;
+}
+
+header nav ul li::before {
+  content: "»";
+  display: inline-block;
+  margin: 0 0.5rem;
+}
+
+header nav a {
+  color: #a8a8a8;
+  text-decoration: underline dotted;
+}
+
+header nav h1 {
+  display: inline-block;
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: normal;
+}
+main {
+  display: flex;
+}
+
+main .card {
+  height: 200px;
+  width: 200px;
+  margin: 2rem 0 0 2rem;
+  border: 1px solid #a5a5a5;
+}
+
+main .card h2 {
+  font-size: 1.1rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

@@ -6,8 +6,8 @@ use crate::config::Config;
 
 
 pub fn gallery_route(req: &HttpRequest<Config>) -> Result<Either<Album, Photo>> {
-    let path = get_album_canonical_path(req.match_info().query("path")?, req.state());
-    if is_path_album(&path) {
+    let path = req.match_info().query("path")?;
+    if is_path_album(&path, req.state()) {
         Ok(Either::A(Album::from_path(path, req.state())?))
     } else {
         Ok(Either::B(Photo::from_path(path, req.state())?))

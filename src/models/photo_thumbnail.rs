@@ -13,7 +13,7 @@ use super::helper::ExifExtractor;
 #[derive(Debug)]
 pub struct PhotoThumbnail {
     pub name: String,
-    creation_date: String,
+    pub creation_date: String,
 }
 
 impl PhotoThumbnail {
