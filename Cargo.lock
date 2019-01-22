@@ -144,8 +144,10 @@ name = "askama"
 version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
+ "actix-web 0.7.18 (registry+https://github.com/rust-lang/crates.io-index)",
  "askama_derive 0.7.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "askama_shared 0.7.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "mime_guess 2.0.0-alpha.6 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]

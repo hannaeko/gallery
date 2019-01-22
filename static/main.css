@@ -2,6 +2,7 @@ html, body {
   margin: 0;
   padding: 0;
 }
+
 header {
   padding: 0.5em 0;
   border-bottom: 2px solid #a5a5a5;
@@ -41,16 +42,7 @@ main {
   display: flex;
 }
 
-main .card {
-  height: 200px;
-  width: 200px;
-  margin: 2rem 0 0 2rem;
-  border: 1px solid #a5a5a5;
-}
-
-main .card h2 {
-  font-size: 1.1rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+main a {
+  color: inherit;
+  text-decoration: none;
 }

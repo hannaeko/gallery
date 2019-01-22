@@ -11,6 +11,7 @@ pub struct Config {
     pub cache_path: &'static str,
 
     pub small_thumbnail: ThumbnailConfig,
+    pub medium_thumbnail: ThumbnailConfig,
 }
 
 impl Config {
@@ -22,9 +23,14 @@ impl Config {
             cache_path: "/home/zorg/documents/projets/gallery/cache",
 
             small_thumbnail: ThumbnailConfig {
-                size: 250,
+                size: 200,
                 square: true,
                 extension: "small.jpeg",
+            },
+            medium_thumbnail: ThumbnailConfig {
+                size: 1000,
+                square: false,
+                extension: "medium.jpeg",
             },
         }
     }

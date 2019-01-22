@@ -10,4 +10,8 @@ env_logger = "0.6.0"
 kamadak-exif = "0.3.1"
 image = "0.21.0"
 failure = "0.1.5"
-askama = "0.7.2"
+
+[dependencies.askama]
+version = "0.7.2"
+default-features = false
+features = ["with-actix-web"]

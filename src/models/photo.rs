@@ -6,13 +6,14 @@ use crate::config::Config;
 use crate::utils;
 use crate::error::GalleryError;
 
-use actix_web::{Responder, HttpRequest, HttpResponse, Error};
+use askama::Template;
 use exif::Tag;
 
-#[derive(Debug)]
+#[derive(Debug, Template)]
+#[template(path = "photo.html")]
 pub struct Photo {
     name: String,
-    album_path: PathBuf,
+    album_path: String,
     previous_photo: Option<String>,
     next_photo: Option<String>,
     creation_date: String,
@@ -29,7 +30,7 @@ impl Photo {
             .map_err(|_| GalleryError::InvalidFileName)?;
 
 
-        let album_path = PathBuf::from("/").join(path.parent().unwrap());
+        let album_path = PathBuf::from("/").join(path.parent().unwrap()).to_str().unwrap().to_string();
         let full_path = utils::get_album_canonical_path(path, config);
 
         let mut names: Vec<_> = fs::read_dir(full_path.parent().unwrap())?
@@ -72,7 +73,7 @@ impl ExifExtractor for Photo {
         Tag::ExposureTime,
     ];
 }
-
+/*
 impl Responder for Photo {
     type Item = HttpResponse;
     type Error = Error;
@@ -81,3 +82,4 @@ impl Responder for Photo {
         Ok(HttpResponse::Ok().content_type("text/plain").body(format!("{:#?}", self)))
     }
 }
+*/

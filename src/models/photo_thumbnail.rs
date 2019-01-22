@@ -41,19 +41,13 @@ impl PhotoThumbnail {
             let img = image::open(&path)?;
             let (width, height) = img.dimensions();
 
-            let ratio = std::cmp::max(height, width) as f32 / std::cmp::min(height, width) as f32;
-            let nsize = (ratio * size as f32) as u32;
-
-            let mut thumbnail = img.resize(nsize, nsize, image::FilterType::Gaussian);
-
-            if square {
-                let (nwidth, nheight) = thumbnail.dimensions();
-
-                let x = if size > nwidth { 0 } else { (nwidth - size) / 2 };
-                let y = if size > nheight { 0 } else { (nheight - size) / 2 };
-
-                thumbnail = thumbnail.crop(x, y, size, size);
-            }
+            let thumbnail = if width < size && height < size {
+                img
+            } else if square {
+                img.resize_to_fill(size, size, image::FilterType::Gaussian)
+            } else {
+                img.resize(size, size, image::FilterType::Gaussian)
+            };
 
             fs::create_dir_all(thumbnail_path.parent().unwrap())?;
             thumbnail.save(&thumbnail_path)?;
@@ -72,12 +66,14 @@ impl ExifExtractor for PhotoThumbnail {
 
 pub enum ThumbnailSize {
     Small,
+    Medium,
 }
 
 impl ThumbnailSize {
     pub fn get_thumbnail_config<'a>(&self, config: &'a Config) -> &'a ThumbnailConfig {
         match self {
             ThumbnailSize::Small => &config.small_thumbnail,
+            ThumbnailSize::Medium => &config.medium_thumbnail,
         }
     }
 }

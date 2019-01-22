@@ -7,7 +7,6 @@ use crate::config::Config;
 use crate::error::GalleryError;
 
 use askama::Template;
-use actix_web::{Responder, HttpRequest, HttpResponse, Error};
 
 #[derive(Debug, Template)]
 #[template(path = "album.html")]
@@ -50,15 +49,5 @@ impl Album {
             albums,
             photos,
         })
-    }
-}
-
-impl Responder for Album {
-    type Item = HttpResponse;
-    type Error = Error;
-
-    fn respond_to<S>(self, _req: &HttpRequest<S>) -> Result<Self::Item, Self::Error> {
-        let body = self.render().unwrap();
-        Ok(HttpResponse::Ok().content_type("text/html").body(body))
     }
 }

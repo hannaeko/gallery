@@ -16,6 +16,7 @@ fn create_app() -> App<Config> {
         .middleware(Logger::new("\"%r\" %Dms %s"))
         .handler("/static", fs::StaticFiles::new("./static").unwrap())
         .resource("/{path:.*}/small", |r| r.f(routes::small_thumbnail_route))
+        .resource("/{path:.*}/medium", |r| r.f(routes::medium_thumbnail_route))
         .resource("/{path:.*}/full", |r| r.f(routes::full_photo_route))
         .resource("/{path:.*}", |r| r.f(routes::gallery_route))
         .default_resource(|r| r.h(NormalizePath::default()))
