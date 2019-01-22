@@ -1,4 +1,5 @@
 use std::io;
+use std::fs;
 use std::path::PathBuf;
 
 use super::helper::ExifExtractor;
@@ -9,6 +10,8 @@ use exif::Tag;
 #[derive(Debug)]
 pub struct Photo {
     name: String,
+    previous_photo: Option<String>,
+    next_photo: Option<String>,
     creation_date: String,
     flash: String,
     exposure_time: String,
@@ -22,10 +25,33 @@ impl Photo {
             .into_string()
             .unwrap();
 
-        let exif_map = Self::extract_exif(path)?;
 
+        let album_path = path.parent().unwrap();
+        let mut names: Vec<_> = fs::read_dir(album_path)?
+            .filter_map(|entry| entry.ok())
+            .filter(|entry| entry.path().is_file())
+            .filter_map(|file| file.file_name().into_string().ok())
+            .collect();
+
+        names.sort();
+
+        let mut iter_names = names.iter();
+        let mut prev = None;
+
+        for photo_name in iter_names.by_ref() {
+            if *photo_name == name {
+                break;
+            }
+            prev = Some(photo_name.to_string());
+        }
+
+        let next = iter_names.next().map(|v| v.to_string());
+
+        let exif_map = Self::extract_exif(&path)?;
         Ok(Photo {
             name,
+            next_photo: next,
+            previous_photo: prev,
             creation_date: exif_map[&Tag::DateTimeOriginal].to_owned(),
             flash: exif_map[&Tag::Flash].to_owned(),
             exposure_time: exif_map[&Tag::ExposureTime].to_owned(),

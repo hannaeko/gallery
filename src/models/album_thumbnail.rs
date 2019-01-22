@@ -3,7 +3,7 @@ use std::path::PathBuf;
 
 #[derive(Debug)]
 pub struct AlbumThumbnail {
-    name: String
+    pub name: String
 }
 
 impl AlbumThumbnail {

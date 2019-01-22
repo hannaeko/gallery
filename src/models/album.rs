@@ -41,6 +41,9 @@ impl Album {
             }
         }
 
+        album.albums.sort_by(|a, b| a.name.cmp(&b.name));
+        album.photos.sort_by(|a, b| a.name.cmp(&b.name));
+
         Ok(album)
     }
 }

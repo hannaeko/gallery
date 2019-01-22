@@ -6,7 +6,7 @@ use std::collections::HashMap;
 pub trait ExifExtractor {
     const TAG_LIST: &'static [exif::Tag];
 
-    fn extract_exif(path: PathBuf) -> io::Result<HashMap<exif::Tag, String>> {
+    fn extract_exif(path: &PathBuf) -> io::Result<HashMap<exif::Tag, String>> {
         let mut tag_map: HashMap<_,_> = Self::TAG_LIST.iter().map(|tag| (*tag, String::from(""))).collect();
 
         let file = fs::File::open(path)?;

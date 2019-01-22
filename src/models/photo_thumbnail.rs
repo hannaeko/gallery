@@ -12,7 +12,7 @@ use super::helper::ExifExtractor;
 
 #[derive(Debug)]
 pub struct PhotoThumbnail {
-    name: String,
+    pub name: String,
     creation_date: String,
 }
 
@@ -24,7 +24,7 @@ impl PhotoThumbnail {
             .into_string()
             .unwrap();
 
-        let exif_map = Self::extract_exif(path)?;
+        let exif_map = Self::extract_exif(&path)?;
 
         Ok(PhotoThumbnail {
             name,
