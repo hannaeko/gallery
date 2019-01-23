@@ -5,5 +5,28 @@
 {% endblock %}
 
 {% block main %}
-  <img src="{{album_path}}/{{name}}/medium">
+  <div class="photo-container">
+    {% if previous_photo.is_some() %}
+      <a title="Previous photo" class="previous" href="{{ previous_photo.as_ref().unwrap() }}"><span>◀</span></a>
+    {% else %}
+      <span class="previous"></span>
+    {% endif %}
+    <img src="{{album_path}}/{{name}}/medium">
+    {% if next_photo.is_some() %}
+      <a title="Next photo" class="next" href="{{ next_photo.as_ref().unwrap() }}"><span>▶</span></a>
+    {% else %}
+      <span class="next"></span>
+    {% endif %}
+  </div>
+  <div class="metadata-container">
+    <h2>Metadata</h2>
+    <dl>
+      <dt>Date</dt>
+      <dd>{{ creation_date }}</dd>
+      <dt>Flash</dt>
+      <dd>{{ flash }}</dd>
+      <dt>Exposure time</dt>
+      <dd>{{ exposure_time }}</dd>
+    </dl>
+  </div>
 {% endblock %}

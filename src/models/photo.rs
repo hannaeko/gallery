@@ -10,7 +10,7 @@ use askama::Template;
 use exif::Tag;
 
 #[derive(Debug, Template)]
-#[template(path = "photo.html")]
+#[template(path = "photo.html", print = "code")]
 pub struct Photo {
     name: String,
     album_path: String,
@@ -73,13 +73,3 @@ impl ExifExtractor for Photo {
         Tag::ExposureTime,
     ];
 }
-/*
-impl Responder for Photo {
-    type Item = HttpResponse;
-    type Error = Error;
-
-    fn respond_to<S>(self, _req: &HttpRequest<S>) -> Result<Self::Item, Self::Error> {
-        Ok(HttpResponse::Ok().content_type("text/plain").body(format!("{:#?}", self)))
-    }
-}
-*/

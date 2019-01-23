@@ -1,7 +1,9 @@
+main > a {
+  margin: 2rem 0 0 2rem;
+}
 .card {
   height: 200px;
   width: 200px;
-  margin: 2rem 0 0 2rem;
   border: 1px solid #a5a5a5;
   background-size: cover;
   position: relative;

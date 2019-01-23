@@ -3,6 +3,12 @@ html, body {
   padding: 0;
 }
 
+body {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
 header {
   padding: 0.5em 0;
   border-bottom: 2px solid #a5a5a5;
