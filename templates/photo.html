@@ -11,7 +11,9 @@
     {% else %}
       <span class="previous"></span>
     {% endif %}
+
     <img src="{{album_path}}/{{name}}/medium">
+
     {% if next_photo.is_some() %}
       <a title="Next photo" class="next" href="{{ next_photo.as_ref().unwrap() }}"><span>▶</span></a>
     {% else %}
@@ -23,10 +25,16 @@
     <dl>
       <dt>Date</dt>
       <dd>{{ creation_date }}</dd>
+      <dt>Camera</dt>
+      <dd>{{ camera }}</dd>
+      <dt>Exposure time</dt>
+      <dd>{{ exposure_time }} s</dd>
+      <dt>Aperture</dt>
+      <dd>{{ aperture|safe }}</dd>
+      <dt>Focal length</dt>
+      <dd>{{ focal_length }} mm (35 mm equ.: {{ focal_length_in_35mm }} mm)</dd>
       <dt>Flash</dt>
       <dd>{{ flash }}</dd>
-      <dt>Exposure time</dt>
-      <dd>{{ exposure_time }}</dd>
     </dl>
   </div>
 {% endblock %}

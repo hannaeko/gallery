@@ -17,3 +17,11 @@ pub fn get_thumbnail_path(photo_path: &PathBuf, extension: &str, config: &Config
     thumbnail_path.push(photo_path.strip_prefix(config.storage_path).unwrap());
     thumbnail_path.with_extension(extension)
 }
+
+pub fn trim_one_char(s: &String) -> String {
+    if s.len() < 2 {
+        return s.to_string();
+    } else {
+        return s[1..(s.len() - 1)].to_string();
+    }
+}

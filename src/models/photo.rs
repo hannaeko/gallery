@@ -10,7 +10,7 @@ use askama::Template;
 use exif::Tag;
 
 #[derive(Debug, Template)]
-#[template(path = "photo.html", print = "code")]
+#[template(path = "photo.html")]
 pub struct Photo {
     name: String,
     album_path: String,
@@ -19,6 +19,10 @@ pub struct Photo {
     creation_date: String,
     flash: String,
     exposure_time: String,
+    aperture: String,
+    focal_length: String,
+    focal_length_in_35mm: String,
+    camera: String,
 }
 
 impl Photo {
@@ -62,6 +66,10 @@ impl Photo {
             creation_date: exif_map[&Tag::DateTimeOriginal].to_owned(),
             flash: exif_map[&Tag::Flash].to_owned(),
             exposure_time: exif_map[&Tag::ExposureTime].to_owned(),
+            aperture: exif_map[&Tag::FNumber].to_owned(),
+            focal_length: exif_map[&Tag::FocalLength].to_owned(),
+            focal_length_in_35mm: exif_map[&Tag::FocalLengthIn35mmFilm].to_owned(),
+            camera: utils::trim_one_char(&exif_map[&Tag::Model]),
         })
     }
 }
@@ -71,5 +79,9 @@ impl ExifExtractor for Photo {
         Tag::DateTimeOriginal,
         Tag::Flash,
         Tag::ExposureTime,
+        Tag::FNumber,
+        Tag::FocalLength,
+        Tag::FocalLengthIn35mmFilm,
+        Tag::Model,
     ];
 }
