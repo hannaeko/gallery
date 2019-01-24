@@ -17,7 +17,7 @@ pub struct Config {
 impl Config {
     pub fn load() -> Self {
         Config {
-            gallery_name: "gallery",
+            gallery_name: "Gallery",
 
             storage_path: "/home/zorg/documents/projets/gallery/storage",
             cache_path: "/home/zorg/documents/projets/gallery/cache",

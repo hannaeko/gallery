@@ -12,6 +12,7 @@ use askama::Template;
 #[template(path = "album.html")]
 pub struct Album {
     name: String,
+    breadcrumb: Vec<(String, String)>,
     album_path: String,
     albums: Vec<AlbumThumbnail>,
     photos: Vec<PhotoThumbnail>
@@ -25,7 +26,13 @@ impl Album {
             String::from(config.gallery_name)
         };
 
-        let album_path = PathBuf::from("/").join(&path).to_str().unwrap().to_string();
+        let album_path = if path == PathBuf::from("") {
+            "".to_string()
+        } else {
+            PathBuf::from("/").join(&path).to_str().unwrap().to_string()
+        };
+
+        let breadcrumb = utils::get_breadcrumb(&path, config);
         let full_album_path = utils::get_album_canonical_path(path, config);
 
         let mut albums = Vec::new();
@@ -45,6 +52,7 @@ impl Album {
 
         Ok(Album {
             name,
+            breadcrumb,
             album_path,
             albums,
             photos,

@@ -13,6 +13,7 @@ use exif::Tag;
 #[template(path = "photo.html")]
 pub struct Photo {
     name: String,
+    breadcrumb: Vec<(String, String)>,
     photo_full_path: PathBuf,
     album_path: String,
     previous_photo: Option<String>,
@@ -35,15 +36,18 @@ impl Photo {
             .map_err(|_| GalleryError::InvalidFileName)?;
 
         let album_path = PathBuf::from("/").join(path.parent().unwrap()).to_str().unwrap().to_string();
+        let breadcrumb = utils::get_breadcrumb(&path, config);
         let photo_full_path = utils::get_album_canonical_path(path, config);
 
-        Photo {
+        let photo = Photo {
             name,
+            breadcrumb,
             photo_full_path,
             album_path,
             ..Default::default()
-        }
-            .extract_adjacent_photos()?
+        };
+
+        photo.extract_adjacent_photos()?
             .extract_metadata()
     }
 

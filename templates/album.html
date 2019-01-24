@@ -6,7 +6,7 @@
 
 {% block main %}
   {% for album in albums %}
-    <a href="{{ album.name }}">
+    <a href="{{ album_path }}/{{ album.name }}">
       <div class="card album">
         <div class="mask">
           <div class="info">
@@ -17,7 +17,7 @@
     </a>
   {% endfor %}
   {% for photo in photos %}
-    <a href="{{ photo.name }}">
+    <a href="{{ album_path }}/{{ photo.name }}">
       <div class="card photo" style="background-image: url('{{ album_path }}/{{ photo.name }}/small')">
         <div class="mask">
           <div class="info">
