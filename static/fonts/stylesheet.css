@@ -1,0 +1,11 @@
+@font-face {
+    font-family: 'amikoregular';
+    src: url('Amiko-Regular-webfont.eot');
+    src: url('Amiko-Regular-webfont.eot?#iefix') format('embedded-opentype'),
+         url('Amiko-Regular-webfont.woff2') format('woff2'),
+         url('Amiko-Regular-webfont.woff') format('woff'),
+         url('Amiko-Regular-webfont.ttf') format('truetype'),
+         url('Amiko-Regular-webfont.svg#amikoregular') format('svg');
+    font-weight: normal;
+    font-style: normal;
+}

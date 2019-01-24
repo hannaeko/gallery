@@ -1,3 +1,12 @@
+@font-face {
+    font-family: 'amikoregular';
+    src: url('../fonts/Amiko-Regular-webfont.eot');
+    src: url('../fonts/Amiko-Regular-webfont.eot?#iefix') format('embedded-opentype'),
+         url('../fonts/Amiko-Regular-webfont.woff') format('woff'),;
+    font-weight: normal;
+    font-style: normal;
+}
+
 html, body {
   margin: 0;
   padding: 0;
@@ -7,12 +16,14 @@ body {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  font-family: 'amikoregular', 'sans';
 }
 
 header {
   padding: 0.5em 0;
   border-bottom: 2px solid #a5a5a5;
 }
+
 header nav ul {
   padding: 0 0 0 2rem;
   margin: 0;
