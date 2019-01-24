@@ -9,10 +9,11 @@ use crate::error::GalleryError;
 use askama::Template;
 use exif::Tag;
 
-#[derive(Debug, Template)]
+#[derive(Debug, Template, Default)]
 #[template(path = "photo.html")]
 pub struct Photo {
     name: String,
+    photo_full_path: PathBuf,
     album_path: String,
     previous_photo: Option<String>,
     next_photo: Option<String>,
@@ -33,23 +34,33 @@ impl Photo {
             .into_string()
             .map_err(|_| GalleryError::InvalidFileName)?;
 
-
         let album_path = PathBuf::from("/").join(path.parent().unwrap()).to_str().unwrap().to_string();
-        let full_path = utils::get_album_canonical_path(path, config);
+        let photo_full_path = utils::get_album_canonical_path(path, config);
 
-        let mut names: Vec<_> = fs::read_dir(full_path.parent().unwrap())?
+        Photo {
+            name,
+            photo_full_path,
+            album_path,
+            ..Default::default()
+        }
+            .extract_adjacent_photos()?
+            .extract_metadata()
+    }
+
+    fn extract_adjacent_photos(self) -> Result<Self, GalleryError> {
+        let album_full_path = self.photo_full_path.parent().unwrap();
+
+        let mut names: Vec<_> = fs::read_dir(album_full_path)?
             .filter_map(|entry| entry.ok())
             .filter(|entry| entry.path().is_file())
             .filter_map(|file| file.file_name().into_string().ok())
             .collect();
 
         names.sort();
-
         let mut iter_names = names.iter();
         let mut previous_photo = None;
-
         for photo_name in iter_names.by_ref() {
-            if *photo_name == name {
+            if *photo_name == self.name {
                 break;
             }
             previous_photo = Some(photo_name.to_string());
@@ -57,12 +68,17 @@ impl Photo {
 
         let next_photo = iter_names.next().map(|v| v.to_string());
 
-        let exif_map = Self::extract_exif(&full_path)?;
         Ok(Photo {
-            name,
-            album_path,
             next_photo,
             previous_photo,
+            ..self
+        })
+    }
+
+    fn extract_metadata(self) -> Result<Self, GalleryError> {
+        let exif_map = Self::extract_exif(&self.photo_full_path)?;
+
+        Ok(Photo {
             creation_date: exif_map[&Tag::DateTimeOriginal].to_owned(),
             flash: exif_map[&Tag::Flash].to_owned(),
             exposure_time: exif_map[&Tag::ExposureTime].to_owned(),
@@ -70,6 +86,7 @@ impl Photo {
             focal_length: exif_map[&Tag::FocalLength].to_owned(),
             focal_length_in_35mm: exif_map[&Tag::FocalLengthIn35mmFilm].to_owned(),
             camera: utils::trim_one_char(&exif_map[&Tag::Model]),
+            ..self
         })
     }
 }
