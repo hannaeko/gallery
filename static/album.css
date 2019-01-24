@@ -20,6 +20,15 @@ main > a {
   left: 0;
 }
 
+.card.photo .mask {
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.card.photo:hover .mask {
+  opacity: 1;
+}
+
 .card h2 {
   font-size: 1.1rem;
   overflow: hidden;
