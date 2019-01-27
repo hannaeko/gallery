@@ -1,0 +1,14 @@
+gallery_name = "Gallery"
+
+storage_path = "./storage"
+cache_path = "./cache"
+
+[small_thumbnail]
+size = 200
+square = true
+extension = "small.jpeg"
+
+[medium_thumbnail]
+size = 200
+square = false
+extension = "medium.jpeg"

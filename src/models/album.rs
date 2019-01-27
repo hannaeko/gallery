@@ -23,7 +23,7 @@ impl Album {
         let name = if let Some(file_name) = path.file_name() {
             file_name.to_os_string().into_string().unwrap()
         } else {
-            String::from(config.gallery_name)
+            config.gallery_name.clone()
         };
 
         let album_path = if path == PathBuf::from("") {

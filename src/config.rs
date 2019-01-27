@@ -1,14 +1,22 @@
+use std::fs::File;
+use std::io::prelude::*;
+
+use toml;
+use serde::Deserialize;
+
+#[derive(Deserialize)]
 pub struct ThumbnailConfig {
     pub size: u32,
     pub square: bool,
-    pub extension: &'static str,
+    pub extension: String,
 }
 
+#[derive(Deserialize)]
 pub struct Config {
-    pub gallery_name: &'static str,
+    pub gallery_name: String,
 
-    pub storage_path: &'static str,
-    pub cache_path: &'static str,
+    pub storage_path: String,
+    pub cache_path: String,
 
     pub small_thumbnail: ThumbnailConfig,
     pub medium_thumbnail: ThumbnailConfig,
@@ -16,22 +24,12 @@ pub struct Config {
 
 impl Config {
     pub fn load() -> Self {
-        Config {
-            gallery_name: "Gallery",
+        let mut config_file = File::open("gallery.toml").expect("Could not find configuration file.");
 
-            storage_path: "/home/zorg/documents/projets/gallery/storage",
-            cache_path: "/home/zorg/documents/projets/gallery/cache",
+        let mut content = String::new();
+        config_file.read_to_string(&mut content).expect("Something went wrong reading the configuration.");
 
-            small_thumbnail: ThumbnailConfig {
-                size: 200,
-                square: true,
-                extension: "small.jpeg",
-            },
-            medium_thumbnail: ThumbnailConfig {
-                size: 1000,
-                square: false,
-                extension: "medium.jpeg",
-            },
-        }
+        let config: Config = toml::from_str(content.as_str()).expect("Could not parse configuration.");
+        config
     }
 }

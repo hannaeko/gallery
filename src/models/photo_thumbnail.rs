@@ -33,7 +33,10 @@ impl PhotoThumbnail {
     }
 
     pub fn get_image(path: PathBuf, thumbnail_size: ThumbnailSize, config: &Config) -> Result<PathBuf, GalleryError> {
-        let ThumbnailConfig { size, square, extension } = *thumbnail_size.get_thumbnail_config(config);
+        let thumbnail_config = thumbnail_size.get_thumbnail_config(config);
+        let size = thumbnail_config.size;
+        let square = thumbnail_config.square;
+        let extension = &thumbnail_config.extension;
 
         let thumbnail_path = get_thumbnail_path(&path, extension, &config);
 
