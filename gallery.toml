@@ -14,4 +14,4 @@ square = false
 extension = "medium.jpeg"
 
 [db]
-url = "file:db.sqlite"
+url = "db.sqlite"

@@ -8,11 +8,15 @@ mod utils;
 mod routes;
 mod config;
 mod error;
+mod common;
 
 use config::Config;
+use common::AppState;
 
-fn create_app() -> App<Config> {
-    App::with_state(Config::load())
+fn create_app() -> App<AppState> {
+    let config = Config::load();
+    let db = models::db::init(config.db.url.to_owned());
+    App::with_state(AppState { config, db })
         .middleware(Logger::new("\"%r\" %Dms %s"))
         .handler("/static", fs::StaticFiles::new("./static").unwrap())
         .resource("/{path:.*}/small", |r| r.f(routes::small_thumbnail_route))
