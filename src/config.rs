@@ -12,6 +12,11 @@ pub struct ThumbnailConfig {
 }
 
 #[derive(Deserialize)]
+pub struct DbConfig {
+    pub url: String,
+}
+
+#[derive(Deserialize)]
 pub struct Config {
     pub gallery_name: String,
 
@@ -20,6 +25,8 @@ pub struct Config {
 
     pub small_thumbnail: ThumbnailConfig,
     pub medium_thumbnail: ThumbnailConfig,
+
+    pub db: DbConfig,
 }
 
 impl Config {

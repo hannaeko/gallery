@@ -12,3 +12,6 @@ extension = "small.jpeg"
 size = 200
 square = false
 extension = "medium.jpeg"
+
+[db]
+url = "file:db.sqlite"
