@@ -4,19 +4,19 @@ use std::io::prelude::*;
 use toml;
 use serde::Deserialize;
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub struct ThumbnailConfig {
     pub size: u32,
     pub square: bool,
     pub extension: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub struct DbConfig {
     pub url: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub struct Config {
     pub gallery_name: String,
 
