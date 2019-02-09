@@ -1,3 +1,5 @@
+#[macro_use]
+extern crate log;
 use env_logger;
 
 use actix_web::middleware::Logger;
@@ -27,7 +29,7 @@ fn create_app(app_state: AppState) -> App<AppState> {
 }
 
 fn main() {
-    std::env::set_var("RUST_LOG", "actix_web=debug");
+    std::env::set_var("RUST_LOG", "actix_web=debug,gallery=debug");
     env_logger::init();
     let sys = System::new("gallery");
 
@@ -36,15 +38,20 @@ fn main() {
     let index_addr = indexer::init(db_addr.clone());
 
     let app_state = AppState {
-        config,
+        config: config.clone(),
         db: db_addr,
-        index: index_addr,
+        indexer: index_addr.clone()
     };
 
     server::new(move || create_app(app_state.clone()))
         .bind("127.0.0.1:3000")
         .unwrap()
         .start();
+
+    index_addr.do_send(indexer::messages::IndexDirectory {
+        path: std::path::PathBuf::from(config.storage_path),
+        indexer: index_addr.clone()
+    });
 
     let _ = sys.run();
 }

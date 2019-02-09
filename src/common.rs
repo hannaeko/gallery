@@ -8,5 +8,5 @@ use crate::indexer::IndexerActor;
 pub struct AppState {
     pub config: Config,
     pub db: Addr<DbExecutor>,
-    pub index: Addr<IndexerActor>,
+    pub indexer: Addr<IndexerActor>,
 }

@@ -14,3 +14,4 @@ toml = "0.4"
 serde = { version = "1.0", features = ["derive"] }
 askama = { version = "0.7", features = ["with-actix-web"] }
 diesel = { version = "1.4", features = ["sqlite"] }
+log = "0.4"
