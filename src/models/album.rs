@@ -1,11 +1,14 @@
 use std::fs;
 use std::path::PathBuf;
 
-use crate::models::*;
+use actix_web::actix::Message;
+use diesel::result::Error as DieselError;
+
+use super::*;
+use super::schema::albums;
 use crate::utils;
 use crate::config::Config;
 use crate::error::GalleryError;
-
 use askama::Template;
 
 #[derive(Debug, Template)]
@@ -16,6 +19,38 @@ pub struct Album {
     album_path: String,
     albums: Vec<AlbumThumbnail>,
     photos: Vec<PhotoThumbnail>
+}
+
+#[derive(Debug, Insertable)]
+#[table_name = "albums"]
+pub struct NewAlbum {
+    pub id: String,
+    pub name: String,
+    pub parent_album_id: Option<String>,
+}
+
+pub struct CreateAlbum {
+    pub name: String,
+    pub parent_album_id: Option<String>,
+}
+
+pub struct GetAlbumId {
+    pub name: String,
+    pub parent_album_id: String,
+}
+
+pub struct GetRootAlbumId;
+
+impl Message for CreateAlbum {
+    type Result = Result<String, DieselError>;
+}
+
+impl Message for GetAlbumId {
+    type Result = Result<Option<String>, DieselError>;
+}
+
+impl Message for GetRootAlbumId {
+    type Result = Result<Option<String>, DieselError>;
 }
 
 impl Album {

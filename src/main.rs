@@ -1,5 +1,8 @@
 #[macro_use]
 extern crate log;
+#[macro_use]
+extern crate diesel;
+
 use env_logger;
 
 use actix_web::middleware::Logger;
@@ -48,9 +51,9 @@ fn main() {
         .unwrap()
         .start();
 
-    index_addr.do_send(indexer::messages::IndexDirectory {
-        path: std::path::PathBuf::from(config.storage_path),
-        indexer: index_addr.clone()
+    index_addr.do_send(indexer::messages::StartIndexing {
+        storage_path: config.storage_path,
+        indexer: index_addr.clone(),
     });
 
     let _ = sys.run();

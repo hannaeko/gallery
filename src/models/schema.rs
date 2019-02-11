@@ -1,7 +1,7 @@
 table! {
     albums (id) {
-        id -> Integer,
+        id -> Text,
         name -> Text,
-        parent_ablum_id -> Nullable<Integer>,
+        parent_album_id -> Nullable<Text>,
     }
 }

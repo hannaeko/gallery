@@ -1,7 +1,7 @@
 create table albums (
-  id int not null,
+  id varchar (36) not null,
   name varchar (255) not null,
-  parent_ablum_id int,
+  parent_album_id varchar (36) default null,
   primary key (id),
-  foreign key (parent_ablum_id) references albums(id)
+  foreign key (parent_album_id) references albums(id)
 );

@@ -14,7 +14,9 @@ pub enum GalleryError {
     #[fail(display="Error processing a file with an invalid file_name")]
     InvalidFileName,
     #[fail(display="{}", _0)]
-    InternalError(Box<Fail>)
+    InternalError(Box<Fail>),
+    #[fail(display="Error while building the index")]
+    IndexingError,
 }
 
 impl ResponseError for GalleryError {
