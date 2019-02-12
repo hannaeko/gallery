@@ -2,7 +2,6 @@ use std::fs;
 use std::path::PathBuf;
 
 use exif::Tag;
-use crate::utils::get_thumbnail_path;
 use crate::config::{Config, ThumbnailConfig};
 use crate::error::GalleryError;
 
@@ -32,31 +31,35 @@ impl PhotoThumbnail {
         })
     }
 
-    pub fn get_image(path: PathBuf, thumbnail_size: ThumbnailSize, config: &Config) -> Result<PathBuf, GalleryError> {
-        let thumbnail_config = thumbnail_size.get_thumbnail_config(config);
-        let size = thumbnail_config.size;
-        let square = thumbnail_config.square;
-        let extension = &thumbnail_config.extension;
+    pub fn create_image(path: PathBuf, thumbnail_size: ThumbnailSize, config: &Config) -> Result<PathBuf, GalleryError> {
+        let ThumbnailConfig { size, square, .. } = *thumbnail_size.get_thumbnail_config(config);
 
-        let thumbnail_path = get_thumbnail_path(&path, extension, &config);
+        let thumbnail_path = Self::get_image_path(&path, thumbnail_size, &config);
 
-        if !thumbnail_path.exists() {
-            let img = image::open(&path)?;
-            let (width, height) = img.dimensions();
+        let img = image::open(&path)?;
+        let (width, height) = img.dimensions();
 
-            let thumbnail = if width < size && height < size {
-                img
-            } else if square {
-                img.resize_to_fill(size, size, image::FilterType::Gaussian)
-            } else {
-                img.resize(size, size, image::FilterType::Gaussian)
-            };
+        let thumbnail = if width < size && height < size {
+            img
+        } else if square {
+            img.resize_to_fill(size, size, image::FilterType::Gaussian)
+        } else {
+            img.resize(size, size, image::FilterType::Gaussian)
+        };
 
-            fs::create_dir_all(thumbnail_path.parent().unwrap())?;
-            thumbnail.save(&thumbnail_path)?;
-        }
+        fs::create_dir_all(thumbnail_path.parent().unwrap())?;
+        thumbnail.save(&thumbnail_path)?;
 
         Ok(thumbnail_path)
+    }
+
+    pub fn get_image_path(photo_path: &PathBuf, thumbnail_size: ThumbnailSize, config: &Config) -> PathBuf {
+        let ThumbnailConfig { extension, .. } = thumbnail_size.get_thumbnail_config(config);
+
+        let mut thumbnail_path = PathBuf::from(&config.cache_path);
+
+        thumbnail_path.push(photo_path.strip_prefix(&fs::canonicalize(&config.storage_path).unwrap()).unwrap());
+        thumbnail_path.with_extension(extension)
     }
 }
 

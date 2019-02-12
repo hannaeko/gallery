@@ -144,7 +144,7 @@ impl Handler<IndexFile> for IndexerActor {
             camera: utils::trim_one_char(&exif_map[&Tag::Model]),
         }).wait().map_err(|_| GalleryError::IndexingError)??;
 
-        PhotoThumbnail::get_image(msg.path, ThumbnailSize::Small, &self.config)?;
+        PhotoThumbnail::create_image(msg.path, ThumbnailSize::Small, &self.config)?;
 
         Ok(())
     }

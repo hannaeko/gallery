@@ -19,22 +19,22 @@ pub fn small_thumbnail_route(req: &HttpRequest<AppState>) -> Result<NamedFile> {
     let state = req.state();
     let path = get_album_canonical_path(req.match_info().query("path")?, &state.config);
 
-    Ok(NamedFile::open(PhotoThumbnail::get_image(
-        path,
+    Ok(NamedFile::open(PhotoThumbnail::get_image_path(
+        &path,
         ThumbnailSize::Small,
         &state.config
-    )?)?)
+    ))?)
 }
 
 pub fn medium_thumbnail_route(req: &HttpRequest<AppState>) -> Result<NamedFile> {
     let state = req.state();
     let path = get_album_canonical_path(req.match_info().query("path")?, &state.config);
 
-    Ok(NamedFile::open(PhotoThumbnail::get_image(
-        path,
+    Ok(NamedFile::open(PhotoThumbnail::get_image_path(
+        &path,
         ThumbnailSize::Medium,
         &state.config
-    )?)?)
+    ))?)
 }
 
 pub fn full_photo_route(req: &HttpRequest<AppState>) -> Result<NamedFile> {
