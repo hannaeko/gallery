@@ -9,6 +9,7 @@ use futures::prelude::*;
 use crate::models::db::DbExecutor;
 use crate::models::album::{CreateAlbum, GetAlbumId, GetRootAlbumId};
 use crate::models::photo::{Photo, GetPhotoId, CreatePhoto};
+use crate::models::photo_thumbnail::{PhotoThumbnail, ThumbnailSize};
 use crate::models::helper::ExifExtractor;
 use crate::indexer::messages::*;
 use crate::error::GalleryError;
@@ -142,6 +143,8 @@ impl Handler<IndexFile> for IndexerActor {
             focal_length_in_35mm: exif_map[&Tag::FocalLengthIn35mmFilm].to_owned(),
             camera: utils::trim_one_char(&exif_map[&Tag::Model]),
         }).wait().map_err(|_| GalleryError::IndexingError)??;
+
+        PhotoThumbnail::get_image(msg.path, ThumbnailSize::Small, &self.config)?;
 
         Ok(())
     }
