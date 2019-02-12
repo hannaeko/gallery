@@ -1,7 +1,10 @@
 use std::fs;
 use std::path::PathBuf;
 
-use crate::models::helper::ExifExtractor;
+use actix_web::actix::Message;
+
+use super::schema::photos;
+use super::helper::ExifExtractor;
 use crate::config::Config;
 use crate::utils;
 use crate::error::GalleryError;
@@ -25,6 +28,41 @@ pub struct Photo {
     focal_length: String,
     focal_length_in_35mm: String,
     camera: String,
+}
+
+#[derive(Debug, Insertable)]
+#[table_name = "photos"]
+pub struct NewPhoto {
+    pub id: String,
+    pub name: String,
+    pub album_id: String,
+
+    pub creation_date: String,
+    pub flash: String,
+    pub exposure_time: String,
+    pub aperture: String,
+    pub focal_length: String,
+    pub focal_length_in_35mm: String,
+    pub camera: String,
+}
+
+pub struct CreatePhoto {
+    pub name: String,
+    pub path: PathBuf,
+    pub album_id: String,
+}
+
+pub struct GetPhotoId {
+    pub name: String,
+    pub album_id: String,
+}
+
+impl Message for CreatePhoto {
+    type Result = Result<String, GalleryError>;
+}
+
+impl Message for GetPhotoId {
+    type Result = Result<Option<String>, GalleryError>;
 }
 
 impl Photo {

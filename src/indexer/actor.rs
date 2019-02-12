@@ -7,6 +7,7 @@ use actix_web::actix::{Actor, Addr, SyncContext, SyncArbiter, Handler};
 
 use crate::models::db::DbExecutor;
 use crate::models::album::{CreateAlbum, GetAlbumId, GetRootAlbumId};
+use crate::models::photo::{GetPhotoId, CreatePhoto};
 use crate::indexer::messages::*;
 use crate::error::GalleryError;
 
@@ -36,18 +37,46 @@ impl IndexerActor {
                     parent: parent.clone(),
                     indexer: indexer.clone()
                 });
+            } else if path.is_file() {
+                indexer.do_send(IndexFile {
+                    path,
+                    parent: parent.clone(),
+                    indexer: indexer.clone()
+                })
             }
         }
         Ok(())
     }
 
     fn create_album(&mut self, name: String, parent_album_id: Option<String>) -> Result<String, GalleryError> {
-        self.db.send(CreateAlbum {
+        let id = self.db.send(CreateAlbum {
             name,
             parent_album_id,
         }).wait()
-            .map_err(|_| GalleryError::IndexingError)?
-            .map_err(|_| GalleryError::IndexingError)
+            .map_err(|_| GalleryError::IndexingError)??;
+        Ok(id)
+    }
+}
+
+impl Handler<StartIndexing> for IndexerActor {
+    type Result = Result<(), GalleryError>;
+
+    fn handle(&mut self, msg: StartIndexing, _ctx: &mut Self::Context) -> Self::Result {
+        debug!("Starting building index.");
+
+        let storage_path = fs::canonicalize(msg.storage_path)?;
+
+        let root_id_opt = self.db.send(GetRootAlbumId).wait()
+            .map_err(|_| GalleryError::IndexingError)??;
+
+        let root_id = match root_id_opt {
+            Some(id) => id,
+            None => self.create_album(String::from(""), None)?
+        };
+
+        Self::index_children(storage_path, root_id, msg.indexer)?;
+
+        Ok(())
     }
 }
 
@@ -62,8 +91,7 @@ impl Handler<IndexDirectory> for IndexerActor {
             name: name.clone(),
             parent_album_id: msg.parent.clone()
         }).wait()
-            .map_err(|_| GalleryError::IndexingError)?
-            .map_err(|_| GalleryError::IndexingError)?;
+            .map_err(|_| GalleryError::IndexingError)??;
 
         let album_id = match album_id_opt {
             Some(id) => id,
@@ -76,24 +104,27 @@ impl Handler<IndexDirectory> for IndexerActor {
     }
 }
 
-impl Handler<StartIndexing> for IndexerActor {
+impl Handler<IndexFile> for IndexerActor {
     type Result = Result<(), GalleryError>;
 
-    fn handle(&mut self, msg: StartIndexing, _ctx: &mut Self::Context) -> Self::Result {
-        debug!("Starting building index.");
+    fn handle(&mut self, msg: IndexFile, _ctx: &mut Self::Context) -> Self::Result {
+        debug!("Indexing file {:?}", msg.path);
 
-        let storage_path = fs::canonicalize(msg.storage_path)?;
+        let name = msg.path.file_name().unwrap().to_os_string().into_string().unwrap();
 
-        let root_id_opt = self.db.send(GetRootAlbumId).wait()
-            .map_err(|_| GalleryError::IndexingError)?
-            .map_err(|_| GalleryError::IndexingError)?;
+        let photo_id = self.db.send(GetPhotoId {
+            name: name.clone(),
+            album_id: msg.parent.clone(),
+        }).wait()
+            .map_err(|_| GalleryError::IndexingError)??;
 
-        let root_id = match root_id_opt {
-            Some(id) => id,
-            None => self.create_album(String::from(""), None)?
-        };
-
-        Self::index_children(storage_path, root_id, msg.indexer)?;
+        if let None = photo_id {
+            self.db.do_send(CreatePhoto {
+                name: name,
+                path: msg.path,
+                album_id: msg.parent
+            });
+        }
 
         Ok(())
     }

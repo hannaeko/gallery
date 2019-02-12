@@ -1,8 +1,8 @@
-mod photo;
+pub mod photo;
 pub mod album;
 mod photo_thumbnail;
 mod album_thumbnail;
-mod helper;
+pub mod helper;
 pub mod db;
 pub mod schema;
 
