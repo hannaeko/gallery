@@ -38,7 +38,7 @@ fn main() {
 
     let config = Config::load();
     let db_addr = models::db::init(config.db.url.clone());
-    let index_addr = indexer::init(db_addr.clone());
+    let index_addr = indexer::init(db_addr.clone(), config.clone());
 
     let app_state = AppState {
         config: config.clone(),

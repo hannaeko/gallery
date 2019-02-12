@@ -13,18 +13,23 @@ use crate::models::helper::ExifExtractor;
 use crate::indexer::messages::*;
 use crate::error::GalleryError;
 use crate::utils;
+use crate::config::Config;
 
 pub struct IndexerActor {
     db: Addr<DbExecutor>,
+    config: Config,
 }
 
 impl Actor for IndexerActor {
     type Context = SyncContext<Self>;
 }
 
-pub fn init(db_addr: Addr<DbExecutor>) -> Addr<IndexerActor> {
+pub fn init(db_addr: Addr<DbExecutor>, config: Config) -> Addr<IndexerActor> {
     SyncArbiter::start(2, move || {
-        IndexerActor { db: db_addr.clone() }
+        IndexerActor {
+            db: db_addr.clone(),
+            config: config.clone(),
+        }
     })
 }
 
