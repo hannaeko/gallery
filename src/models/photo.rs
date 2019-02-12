@@ -48,8 +48,15 @@ pub struct NewPhoto {
 
 pub struct CreatePhoto {
     pub name: String,
-    pub path: PathBuf,
     pub album_id: String,
+
+    pub creation_date: String,
+    pub flash: String,
+    pub exposure_time: String,
+    pub aperture: String,
+    pub focal_length: String,
+    pub focal_length_in_35mm: String,
+    pub camera: String,
 }
 
 pub struct GetPhotoId {

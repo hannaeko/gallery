@@ -5,13 +5,10 @@ use diesel;
 use diesel::result::Error as DieselError;
 use diesel::prelude::*;
 use diesel::r2d2::{Pool, ConnectionManager};
-use exif::Tag;
 
 use super::album::{NewAlbum, CreateAlbum, GetAlbumId, GetRootAlbumId};
-use super::photo::{Photo, NewPhoto, CreatePhoto, GetPhotoId};
-use super::helper::ExifExtractor;
+use super::photo::{NewPhoto, CreatePhoto, GetPhotoId};
 use crate::error::GalleryError;
-use crate::utils;
 
 pub struct DbExecutor {
     pub conn: Pool<ConnectionManager<SqliteConnection>>,
@@ -93,7 +90,6 @@ impl Handler<CreatePhoto> for DbExecutor {
     fn handle(&mut self, msg: CreatePhoto, _ctx: &mut Self::Context) -> Self::Result {
         use super::schema::photos;
 
-        let exif_map = Photo::extract_exif(&msg.path)?;
         let uuid = uuid::Uuid::new_v4().to_string();
 
         let new_photo = NewPhoto {
@@ -101,13 +97,13 @@ impl Handler<CreatePhoto> for DbExecutor {
             name: msg.name,
             album_id: msg.album_id,
 
-            creation_date: exif_map[&Tag::DateTimeOriginal].to_owned(),
-            flash: exif_map[&Tag::Flash].to_owned(),
-            exposure_time: exif_map[&Tag::ExposureTime].to_owned(),
-            aperture: exif_map[&Tag::FNumber].to_owned(),
-            focal_length: exif_map[&Tag::FocalLength].to_owned(),
-            focal_length_in_35mm: exif_map[&Tag::FocalLengthIn35mmFilm].to_owned(),
-            camera: utils::trim_one_char(&exif_map[&Tag::Model]),
+            creation_date: msg.creation_date,
+            flash: msg.flash,
+            exposure_time: msg.exposure_time,
+            aperture: msg.aperture,
+            focal_length: msg.focal_length,
+            focal_length_in_35mm: msg.focal_length_in_35mm,
+            camera: msg.camera,
         };
 
         diesel::insert_into(photos::table)

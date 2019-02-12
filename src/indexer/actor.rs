@@ -1,15 +1,18 @@
 use std::io;
 use std::fs;
 use std::path::PathBuf;
-use futures::prelude::*;
 
 use actix_web::actix::{Actor, Addr, SyncContext, SyncArbiter, Handler};
+use exif::Tag;
+use futures::prelude::*;
 
 use crate::models::db::DbExecutor;
 use crate::models::album::{CreateAlbum, GetAlbumId, GetRootAlbumId};
-use crate::models::photo::{GetPhotoId, CreatePhoto};
+use crate::models::photo::{Photo, GetPhotoId, CreatePhoto};
+use crate::models::helper::ExifExtractor;
 use crate::indexer::messages::*;
 use crate::error::GalleryError;
+use crate::utils;
 
 pub struct IndexerActor {
     db: Addr<DbExecutor>,
@@ -90,8 +93,7 @@ impl Handler<IndexDirectory> for IndexerActor {
         let album_id_opt = self.db.send(GetAlbumId {
             name: name.clone(),
             parent_album_id: msg.parent.clone()
-        }).wait()
-            .map_err(|_| GalleryError::IndexingError)??;
+        }).wait().map_err(|_| GalleryError::IndexingError)??;
 
         let album_id = match album_id_opt {
             Some(id) => id,
@@ -115,16 +117,26 @@ impl Handler<IndexFile> for IndexerActor {
         let photo_id = self.db.send(GetPhotoId {
             name: name.clone(),
             album_id: msg.parent.clone(),
-        }).wait()
-            .map_err(|_| GalleryError::IndexingError)??;
+        }).wait().map_err(|_| GalleryError::IndexingError)??;
 
-        if let None = photo_id {
-            self.db.do_send(CreatePhoto {
-                name: name,
-                path: msg.path,
-                album_id: msg.parent
-            });
+        if let Some(_) = photo_id {
+            return Ok(());
         }
+
+        let exif_map = Photo::extract_exif(&msg.path)?;
+
+        self.db.send(CreatePhoto {
+            name: name,
+            album_id: msg.parent,
+
+            creation_date: exif_map[&Tag::DateTimeOriginal].to_owned(),
+            flash: exif_map[&Tag::Flash].to_owned(),
+            exposure_time: exif_map[&Tag::ExposureTime].to_owned(),
+            aperture: exif_map[&Tag::FNumber].to_owned(),
+            focal_length: exif_map[&Tag::FocalLength].to_owned(),
+            focal_length_in_35mm: exif_map[&Tag::FocalLengthIn35mmFilm].to_owned(),
+            camera: utils::trim_one_char(&exif_map[&Tag::Model]),
+        }).wait().map_err(|_| GalleryError::IndexingError)??;
 
         Ok(())
     }
