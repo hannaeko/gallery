@@ -4,7 +4,7 @@ use uuid;
 use diesel;
 use diesel::result::Error as DieselError;
 use diesel::prelude::*;
-use diesel::connection::Connection;
+use diesel::r2d2::{Pool, ConnectionManager};
 use exif::Tag;
 
 use super::album::{NewAlbum, CreateAlbum, GetAlbumId, GetRootAlbumId};
@@ -13,16 +13,20 @@ use super::helper::ExifExtractor;
 use crate::error::GalleryError;
 use crate::utils;
 
-pub struct DbExecutor(SqliteConnection);
+pub struct DbExecutor {
+    pub conn: Pool<ConnectionManager<SqliteConnection>>,
+}
 
 impl Actor for DbExecutor {
     type Context = SyncContext<Self>;
 }
 
 pub fn init(db_url: String) -> Addr<DbExecutor> {
+    let manager = ConnectionManager::<SqliteConnection>::new(db_url);
+    let pool = Pool::builder().build(manager).expect("Failed to create pool");
+
     SyncArbiter::start(1, move || {
-        DbExecutor(SqliteConnection::establish(&db_url)
-            .expect("Failed to establish connection to the database"))
+        DbExecutor { conn: pool.clone() }
     })
 }
 
@@ -42,7 +46,7 @@ impl Handler<CreateAlbum> for DbExecutor {
 
         diesel::insert_into(albums::table)
             .values(&new_album)
-            .execute(&self.0)?;
+            .execute(&self.conn.get().unwrap())?;
 
         debug!("Inserting new album in database, {} -> \"{}\"", new_album.id, new_album.name);
 
@@ -60,7 +64,7 @@ impl Handler<GetAlbumId> for DbExecutor {
             .filter(parent_album_id.eq(&msg.parent_album_id))
             .filter(name.eq(&msg.name))
             .select(id)
-            .load::<String>(&self.0)?
+            .load::<String>(&self.conn.get().unwrap())?
             .pop();
 
         Ok(album_id)
@@ -76,7 +80,7 @@ impl Handler<GetRootAlbumId> for DbExecutor {
         let album_id = albums
             .filter(parent_album_id.is_null())
             .select(id)
-            .load::<String>(&self.0)?
+            .load::<String>(&self.conn.get().unwrap())?
             .pop();
 
         Ok(album_id)
@@ -108,7 +112,7 @@ impl Handler<CreatePhoto> for DbExecutor {
 
         diesel::insert_into(photos::table)
             .values(&new_photo)
-            .execute(&self.0)?;
+            .execute(&self.conn.get().unwrap())?;
 
         debug!("Inserting new photo in database {} -> {}", new_photo.id, new_photo.name);
 
@@ -126,7 +130,7 @@ impl Handler<GetPhotoId> for DbExecutor {
             .filter(album_id.eq(&msg.album_id))
             .filter(name.eq(&msg.name))
             .select(id)
-            .load::<String>(&self.0)?
+            .load::<String>(&self.conn.get().unwrap())?
             .pop();
 
         Ok(photo_id)
