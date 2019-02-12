@@ -27,7 +27,7 @@ impl Handler<CreateAlbum> for DbExecutor {
     fn handle(&mut self, msg: CreateAlbum, _ctx: &mut Self::Context) -> Self::Result {
         use super::schema::albums;
 
-        let uuid = format!("{}", uuid::Uuid::new_v4());
+        let uuid = uuid::Uuid::new_v4().to_string();
 
         let new_album = NewAlbum {
             id: uuid,
@@ -38,6 +38,8 @@ impl Handler<CreateAlbum> for DbExecutor {
         diesel::insert_into(albums::table)
             .values(&new_album)
             .execute(&self.0)?;
+
+        debug!("Inserting new album in database, \"{}\" -> {}", new_album.name, new_album.id);
 
         Ok(new_album.id)
     }

@@ -23,6 +23,7 @@ pub fn init(db_addr: Addr<DbExecutor>) -> Addr<IndexerActor> {
         IndexerActor { db: db_addr.clone() }
     })
 }
+
 impl IndexerActor {
     fn index_children(path: PathBuf, parent: String, indexer: Addr<IndexerActor>) -> io::Result<()> {
         for entry in fs::read_dir(path)? {
@@ -69,7 +70,7 @@ impl Handler<IndexDirectory> for IndexerActor {
             None => self.create_album(name, Some(msg.parent))?
         };
 
-        IndexerActor::index_children(msg.path, album_id, msg.indexer)?;
+        Self::index_children(msg.path, album_id, msg.indexer)?;
 
         Ok(())
     }
@@ -91,8 +92,8 @@ impl Handler<StartIndexing> for IndexerActor {
             Some(id) => id,
             None => self.create_album(String::from(""), None)?
         };
-        println!("{}", root_id);
-        IndexerActor::index_children(storage_path, root_id, msg.indexer)?;
+
+        Self::index_children(storage_path, root_id, msg.indexer)?;
 
         Ok(())
     }
