@@ -19,6 +19,11 @@ pub enum GalleryError {
     InternalError(Box<Fail>),
     #[fail(display="Database Error: {}", _0)]
     DbError(DieselError),
+    #[fail(display="Album not found, missing segments : {}", missing_segments)]
+    AlbumNotFound {
+        missing_segments: u8,
+        last_album: String,
+    }
 }
 
 impl ResponseError for GalleryError {

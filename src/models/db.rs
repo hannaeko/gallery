@@ -2,6 +2,7 @@ use actix_web::actix::{Actor, Addr, SyncContext, SyncArbiter, Handler};
 use uuid;
 
 use diesel;
+use diesel::result::Error as DieselError;
 use diesel::prelude::*;
 use diesel::r2d2::{Pool, ConnectionManager};
 
@@ -66,15 +67,27 @@ impl Handler<GetAlbum> for DbExecutor {
 
         let mut breadcrumb: Vec<(String, String)> = vec![(String::from("/"), current_album.name.clone())];
         let mut current_path = String::from("");
+        let mut missing_segments = albums_names.len() as u8;
 
         for album_name in albums_names {
-            current_album = Album::belonging_to(&current_album)
+            let result = Album::belonging_to(&current_album)
                 .filter(name.eq(album_name))
-                .first::<Album>(&conn)?;
+                .first::<Album>(&conn);
+
+            current_album = match result {
+                Ok(album) => album,
+                Err(DieselError::NotFound) => return Err(GalleryError::AlbumNotFound {
+                    missing_segments,
+                    last_album: current_album.id
+                }),
+                Err(e) => return Err(GalleryError::DbError(e))
+            };
+
             current_path.push_str("/");
             current_path.push_str(&current_album.name);
 
             breadcrumb.push((current_path.clone(), current_album.name.clone()));
+            missing_segments -= 1;
         }
 
         breadcrumb.pop();
