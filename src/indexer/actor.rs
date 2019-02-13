@@ -61,8 +61,7 @@ impl IndexerActor {
         let id = self.db.send(CreateAlbum {
             name,
             parent_album_id,
-        }).wait()
-            .map_err(|_| GalleryError::IndexingError)??;
+        }).wait()??;
         Ok(id)
     }
 }
@@ -75,8 +74,7 @@ impl Handler<StartIndexing> for IndexerActor {
 
         let storage_path = fs::canonicalize(msg.storage_path)?;
 
-        let root_id_opt = self.db.send(GetRootAlbumId).wait()
-            .map_err(|_| GalleryError::IndexingError)??;
+        let root_id_opt = self.db.send(GetRootAlbumId).wait()??;
 
         let root_id = match root_id_opt {
             Some(id) => id,
@@ -99,7 +97,7 @@ impl Handler<IndexDirectory> for IndexerActor {
         let album_id_opt = self.db.send(GetAlbumId {
             name: name.clone(),
             parent_album_id: msg.parent.clone()
-        }).wait().map_err(|_| GalleryError::IndexingError)??;
+        }).wait()??;
 
         let album_id = match album_id_opt {
             Some(id) => id,
@@ -123,7 +121,7 @@ impl Handler<IndexFile> for IndexerActor {
         let photo_id = self.db.send(GetPhotoId {
             name: name.clone(),
             album_id: msg.parent.clone(),
-        }).wait().map_err(|_| GalleryError::IndexingError)??;
+        }).wait()??;
 
         if let Some(_) = photo_id {
             return Ok(());
@@ -142,7 +140,7 @@ impl Handler<IndexFile> for IndexerActor {
             focal_length: exif_map[&Tag::FocalLength].to_owned(),
             focal_length_in_35mm: exif_map[&Tag::FocalLengthIn35mmFilm].to_owned(),
             camera: utils::trim_one_char(&exif_map[&Tag::Model]),
-        }).wait().map_err(|_| GalleryError::IndexingError)??;
+        }).wait()??;
 
         PhotoThumbnail::create_image(&msg.path, ThumbnailSize::Small, &self.config)?;
         PhotoThumbnail::create_image(&msg.path, ThumbnailSize::Medium, &self.config)?;

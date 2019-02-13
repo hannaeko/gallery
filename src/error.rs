@@ -5,6 +5,7 @@ use failure::Fail;
 use image::ImageError;
 use diesel::result::Error as DieselError;
 use actix_web::{ResponseError, HttpResponse};
+use actix_web::actix::MailboxError;
 
 #[derive(Fail, Debug)]
 pub enum GalleryError {
@@ -16,8 +17,6 @@ pub enum GalleryError {
     InvalidFileName,
     #[fail(display="{}", _0)]
     InternalError(Box<Fail>),
-    #[fail(display="Error while building the index")]
-    IndexingError,
     #[fail(display="Database Error: {}", _0)]
     DbError(DieselError),
 }
@@ -58,5 +57,11 @@ impl From<std::path::StripPrefixError> for GalleryError {
 impl From<DieselError> for GalleryError {
     fn from(error: DieselError) -> Self {
         GalleryError::DbError(error)
+    }
+}
+
+impl From<MailboxError> for GalleryError {
+    fn from(error: MailboxError) -> Self {
+        GalleryError::InternalError(Box::new(error))
     }
 }

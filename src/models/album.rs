@@ -34,7 +34,7 @@ pub struct Album {
 impl AlbumTemplate {
     pub fn get(path: PathBuf, db: Addr<DbExecutor>, config: Config) -> impl Future<Item = Self, Error = GalleryError> {
         db.send(GetAlbum { path: path.clone() })
-            .map_err(|e| GalleryError::InternalError(Box::new(e)))
+            .from_err::<GalleryError>()
             .flatten()
             .and_then(move |album| {
                 let albums_tn_future = db.send(GetAlbumsThumbnail {
@@ -45,7 +45,7 @@ impl AlbumTemplate {
                 });
                 albums_tn_future
                     .join3(photos_tn_future, Ok(album))
-                    .map_err(|e| GalleryError::InternalError(Box::new(e)))
+                    .from_err()
                     .and_then(move |(albums, photos, album)| {
                         match (albums, photos) {
                             (Ok(albums), Ok(photos)) => {
