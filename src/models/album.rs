@@ -8,8 +8,6 @@ use super::db::DbExecutor;
 use super::schema::albums;
 use super::album_thumbnail::{AlbumThumbnail, GetAlbumsThumbnail};
 use super::photo_thumbnail::{PhotoThumbnail, GetPhotosThumbnail};
-use crate::utils;
-use crate::config::Config;
 use crate::error::GalleryError;
 
 #[derive(Debug, Template)]
@@ -31,34 +29,33 @@ pub struct Album {
     pub parent_album_id: Option<String>,
 }
 
+pub struct AlbumResult {
+    pub album: Album,
+    pub breadcrumb: Vec<(String, String)>,
+}
+
 impl AlbumTemplate {
-    pub fn get(path: PathBuf, db: Addr<DbExecutor>, config: Config) -> impl Future<Item = Self, Error = GalleryError> {
+    pub fn get(path: PathBuf, db: Addr<DbExecutor>) -> impl Future<Item = Self, Error = GalleryError> {
         db.send(GetAlbum { path: path.clone() })
             .from_err::<GalleryError>()
             .flatten()
-            .and_then(move |album| {
+            .and_then(move |res| {
                 let albums_tn_future = db.send(GetAlbumsThumbnail {
-                    parent_album_id: album.id.clone()
+                    parent_album_id: res.album.id.clone()
                 });
                 let photos_tn_future = db.send(GetPhotosThumbnail {
-                    parent_album_id: album.id.clone()
+                    parent_album_id: res.album.id.clone()
                 });
                 albums_tn_future
-                    .join3(photos_tn_future, Ok(album))
+                    .join3(photos_tn_future, Ok(res))
                     .from_err()
-                    .and_then(move |(albums, photos, album)| {
+                    .and_then(move |(albums, photos, res)| {
                         match (albums, photos) {
                             (Ok(albums), Ok(photos)) => {
-                                let album_path = if path == PathBuf::from("") {
-                                    "".to_string()
-                                } else {
-                                    PathBuf::from("/").join(&path).to_str().unwrap().to_string()
-                                };
-
                                 Ok(AlbumTemplate {
-                                    name: album.name,
-                                    breadcrumb: utils::get_breadcrumb(&path, &config),
-                                    album_path: album_path,
+                                    name: res.album.name,
+                                    breadcrumb: res.breadcrumb,
+                                    album_path: Self::get_album_url(path),
                                     albums: albums,
                                     photos: photos,
                                 })
@@ -67,6 +64,14 @@ impl AlbumTemplate {
                         }
                     })
             })
+    }
+
+    fn get_album_url(path: PathBuf) -> String {
+        if path == PathBuf::from("") {
+            "".to_string()
+        } else {
+            PathBuf::from("/").join(&path).to_str().unwrap().to_string()
+        }
     }
 }
 
@@ -91,7 +96,7 @@ impl Message for CreateAlbum {
 }
 
 impl Message for GetAlbum {
-    type Result = Result<Album, GalleryError>;
+    type Result = Result<AlbumResult, GalleryError>;
 }
 
 impl Message for GetAlbumId {

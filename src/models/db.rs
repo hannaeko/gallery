@@ -5,7 +5,7 @@ use diesel;
 use diesel::prelude::*;
 use diesel::r2d2::{Pool, ConnectionManager};
 
-use super::album::{Album, CreateAlbum, GetAlbum, GetAlbumId, GetRootAlbumId};
+use super::album::{Album, AlbumResult, CreateAlbum, GetAlbum, GetAlbumId, GetRootAlbumId};
 use super::photo::{NewPhoto, CreatePhoto, GetPhotoId};
 use super::album_thumbnail::{AlbumThumbnail, GetAlbumsThumbnail};
 use super::photo_thumbnail::{PhotoThumbnail, GetPhotosThumbnail};
@@ -53,25 +53,36 @@ impl Handler<CreateAlbum> for DbExecutor {
 }
 
 impl Handler<GetAlbum> for DbExecutor {
-    type Result = Result<Album, GalleryError>;
+    type Result = Result<AlbumResult, GalleryError>;
 
     fn handle(&mut self, msg: GetAlbum, _ctx: &mut Self::Context) -> Self::Result {
         use super::schema::albums::dsl::*;
 
         let conn = self.conn.get().unwrap();
         let albums_names: Vec<_> = msg.path.iter().map(|e| e.to_str().unwrap()).collect();
-
         let mut current_album = albums
             .filter(parent_album_id.is_null())
             .first::<Album>(&conn)?;
+
+        let mut breadcrumb: Vec<(String, String)> = vec![(String::from("/"), current_album.name.clone())];
+        let mut current_path = String::from("");
 
         for album_name in albums_names {
             current_album = Album::belonging_to(&current_album)
                 .filter(name.eq(album_name))
                 .first::<Album>(&conn)?;
+            current_path.push_str("/");
+            current_path.push_str(&current_album.name);
+
+            breadcrumb.push((current_path.clone(), current_album.name.clone()));
         }
 
-        Ok(current_album)
+        breadcrumb.pop();
+
+        Ok(AlbumResult {
+            album: current_album,
+            breadcrumb: breadcrumb,
+        })
     }
 }
 

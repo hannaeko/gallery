@@ -10,7 +10,7 @@ pub fn gallery_route(req: &HttpRequest<AppState>) -> Result<Either<AlbumTemplate
     let path = req.match_info().query("path")?;
     let state = req.state();
     if is_path_album(&path, &state.config) {
-        let album = AlbumTemplate::get(path, state.db.clone(), state.config.clone()).wait()?;
+        let album = AlbumTemplate::get(path, state.db.clone()).wait()?;
         Ok(Either::A(album))
     } else {
         Ok(Either::B(Photo::from_path(path, &state.config)?))
