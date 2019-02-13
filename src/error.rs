@@ -64,7 +64,10 @@ impl From<std::path::StripPrefixError> for GalleryError {
 
 impl From<DieselError> for GalleryError {
     fn from(error: DieselError) -> Self {
-        GalleryError::DbError(error)
+        match error {
+            DieselError::NotFound => GalleryError::NotFound,
+            err => GalleryError::DbError(err)
+        }
     }
 }
 
