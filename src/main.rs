@@ -27,7 +27,7 @@ fn create_app(app_state: AppState) -> App<AppState> {
         .resource("/{path:.*}/small", |r| r.f(routes::small_thumbnail_route))
         .resource("/{path:.*}/medium", |r| r.f(routes::medium_thumbnail_route))
         .resource("/{path:.*}/full", |r| r.f(routes::full_photo_route))
-        .resource("/{path:.*}", |r| r.f(routes::gallery_route))
+        .resource("/{path:.*}", |r| r.with_async(routes::gallery_route))
         .default_resource(|r| r.h(NormalizePath::default()))
 }
 

@@ -1,4 +1,4 @@
-use actix_web::{HttpRequest, Result, Either, fs::NamedFile};
+use actix_web::{HttpRequest, Result, Either, fs::NamedFile, AsyncResponder, State};
 use futures::prelude::*;
 
 use crate::utils::*;
@@ -7,12 +7,13 @@ use crate::error::GalleryError;
 use crate::common::AppState;
 
 
-pub fn gallery_route(req: &HttpRequest<AppState>) -> Result<Either<AlbumTemplate, PhotoTemplate>> {
-    let path: std::path::PathBuf = req.match_info().query("path")?;
-    let state = req.state();
-    let r = AlbumTemplate::get(path.clone(), state.db.clone())
+pub fn gallery_route((req, state): (HttpRequest<AppState>, State<AppState>))
+    -> Box<Future<Item = Either<AlbumTemplate, PhotoTemplate>, Error = GalleryError>>
+{
+    let path: std::path::PathBuf = req.match_info().query("path").unwrap();
+    AlbumTemplate::get(path.clone(), state.db.clone())
         .map(|album| Either::A(album))
-        .or_else(|err| -> Box<Future<Item = Either<AlbumTemplate, PhotoTemplate>, Error = GalleryError>> {
+        .or_else(move |err| -> Box<Future<Item = Either<AlbumTemplate, PhotoTemplate>, Error = GalleryError>> {
             match err {
                  GalleryError::AlbumNotFound {
                      missing_segments,
@@ -30,8 +31,7 @@ pub fn gallery_route(req: &HttpRequest<AppState>) -> Result<Either<AlbumTemplate
                 },
                 e => Box::new(futures::future::err(e))
             }
-        }).wait()?;
-    Ok(r)
+        }).responder()
 }
 
 pub fn small_thumbnail_route(req: &HttpRequest<AppState>) -> Result<NamedFile> {
