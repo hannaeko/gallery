@@ -4,7 +4,7 @@ use std::path::PathBuf;
 
 use actix_web::actix::{Actor, Addr, SyncContext, SyncArbiter, Handler};
 use exif::Tag;
-use futures::prelude::*;
+use futures::future::Future;
 
 use crate::models::db::DbExecutor;
 use crate::models::album::{CreateAlbum, GetAlbumId, GetRootAlbumId};
@@ -92,7 +92,8 @@ impl Handler<IndexDirectory> for IndexerActor {
 
     fn handle(&mut self, msg: IndexDirectory, _ctx: &mut Self::Context) -> Self::Result {
         debug!("Indexing directory {:?}", msg.path);
-        let name = msg.path.file_name().unwrap().to_os_string().into_string().unwrap();
+
+        let name =  utils::get_file_name_string(&msg.path)?;
 
         let album_id_opt = self.db.send(GetAlbumId {
             name: name.clone(),
@@ -116,7 +117,7 @@ impl Handler<IndexFile> for IndexerActor {
     fn handle(&mut self, msg: IndexFile, _ctx: &mut Self::Context) -> Self::Result {
         debug!("Indexing file {:?}", msg.path);
 
-        let name = msg.path.file_name().unwrap().to_os_string().into_string().unwrap();
+        let name = utils::get_file_name_string(&msg.path)?;
 
         let photo_id = self.db.send(GetPhotoId {
             name: name.clone(),

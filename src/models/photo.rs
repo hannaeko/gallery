@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use actix_web::actix::{Addr, Message};
-use futures::prelude::*;
+use futures::future::Future;
 use askama::Template;
 use exif::Tag;
 

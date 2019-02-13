@@ -1,5 +1,5 @@
 use actix_web::{HttpRequest, Result, Either, fs::NamedFile, AsyncResponder, State};
-use futures::prelude::*;
+use futures::future::{self, Future};
 
 use crate::utils::*;
 use crate::models::{AlbumTemplate, PhotoTemplate, PhotoThumbnail, ThumbnailSize};
@@ -20,7 +20,10 @@ pub fn gallery_route((req, state): (HttpRequest<AppState>, State<AppState>))
                      ref last_album,
                      ref current_breadcrumb,
                  } if missing_segments == 1 => {
-                    let name = path.file_name().unwrap().to_os_string().into_string().unwrap();
+                    let name = match get_file_name_string(path) {
+                        Ok(name) => name,
+                        Err(e) => return Box::new(future::err(e))
+                    };
 
                     let res = PhotoTemplate::get(name,
                         last_album.to_owned(),
@@ -29,7 +32,7 @@ pub fn gallery_route((req, state): (HttpRequest<AppState>, State<AppState>))
                     ).map(|photo| Either::B(photo));
                     Box::new(res)
                 },
-                e => Box::new(futures::future::err(e))
+                e => Box::new(future::err(e))
             }
         }).responder()
 }

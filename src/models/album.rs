@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use askama::Template;
 use actix_web::actix::{Addr, Message};
-use futures::prelude::*;
+use futures::future::Future;
 
 use super::db::DbExecutor;
 use super::schema::albums;

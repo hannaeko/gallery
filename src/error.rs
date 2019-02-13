@@ -13,7 +13,7 @@ pub enum GalleryError {
     NotFound,
     #[fail(display="Error processing image, {}", _0)]
     ImageError(ImageError),
-    #[fail(display="Error processing a file with an invalid file_name")]
+    #[fail(display="Error processing a file with an invalid file name")]
     InvalidFileName,
     #[fail(display="{}", _0)]
     InternalError(Box<Fail>),
