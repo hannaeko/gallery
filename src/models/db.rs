@@ -7,7 +7,7 @@ use diesel::prelude::*;
 use diesel::r2d2::{Pool, ConnectionManager};
 
 use super::album::{Album, AlbumResult, CreateAlbum, GetAlbum, GetAlbumId, GetRootAlbumId};
-use super::photo::{NewPhoto, CreatePhoto, GetPhoto, GetPhotoId, GetAdjacentPhotos};
+use super::photo::{Photo, CreatePhoto, GetPhoto, GetPhotoId, GetAdjacentPhotos};
 use super::album_thumbnail::{AlbumThumbnail, GetAlbumsThumbnail};
 use super::photo_thumbnail::{PhotoThumbnail, GetPhotosThumbnail};
 use crate::error::GalleryError;
@@ -141,7 +141,7 @@ impl Handler<CreatePhoto> for DbExecutor {
 
         let uuid = uuid::Uuid::new_v4().to_string();
 
-        let new_photo = NewPhoto {
+        let new_photo = Photo {
             id: uuid,
             name: msg.name,
             album_id: msg.album_id,
@@ -166,7 +166,7 @@ impl Handler<CreatePhoto> for DbExecutor {
 }
 
 impl Handler<GetPhoto> for DbExecutor {
-    type Result = Result<NewPhoto, GalleryError>;
+    type Result = Result<Photo, GalleryError>;
 
     fn handle(&mut self, msg: GetPhoto, _ctx: &mut Self::Context) -> Self::Result {
         use super::schema::photos::dsl::*;
@@ -174,7 +174,7 @@ impl Handler<GetPhoto> for DbExecutor {
         let photo = photos
             .filter(album_id.eq(&msg.album_id))
             .filter(name.eq(&msg.name))
-            .first::<NewPhoto>(&self.conn.get().unwrap())?;
+            .first::<Photo>(&self.conn.get().unwrap())?;
         Ok(photo)
     }
 }
