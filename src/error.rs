@@ -30,7 +30,9 @@ pub enum GalleryError {
 impl ResponseError for GalleryError {
     fn error_response(&self) -> HttpResponse {
         match *self {
-            GalleryError::NotFound => HttpResponse::NotFound().content_type("text/html").finish(),
+            GalleryError::NotFound | GalleryError::AlbumNotFound { .. } => {
+                HttpResponse::NotFound().content_type("text/html").finish()
+            },
             _ => HttpResponse::InternalServerError().content_type("text/html").finish()
         }
     }
