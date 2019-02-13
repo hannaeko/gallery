@@ -2,7 +2,6 @@ use actix_web::actix::{Actor, Addr, SyncContext, SyncArbiter, Handler};
 use uuid;
 
 use diesel;
-use diesel::result::Error as DieselError;
 use diesel::prelude::*;
 use diesel::r2d2::{Pool, ConnectionManager};
 
@@ -30,7 +29,7 @@ pub fn init(db_url: String) -> Addr<DbExecutor> {
 }
 
 impl Handler<CreateAlbum> for DbExecutor {
-    type Result = Result<String, DieselError>;
+    type Result = Result<String, GalleryError>;
 
     fn handle(&mut self, msg: CreateAlbum, _ctx: &mut Self::Context) -> Self::Result {
         use super::schema::albums;
@@ -77,7 +76,7 @@ impl Handler<GetAlbum> for DbExecutor {
 }
 
 impl Handler<GetAlbumId> for DbExecutor {
-    type Result = Result<Option<String>, DieselError>;
+    type Result = Result<Option<String>, GalleryError>;
 
     fn handle(&mut self, msg: GetAlbumId, _ctx: &mut Self::Context) -> Self::Result {
         use super::schema::albums::dsl::*;
@@ -94,7 +93,7 @@ impl Handler<GetAlbumId> for DbExecutor {
 }
 
 impl Handler<GetRootAlbumId> for DbExecutor {
-    type Result = Result<Option<String>, DieselError>;
+    type Result = Result<Option<String>, GalleryError>;
 
     fn handle(&mut self, _msg: GetRootAlbumId, _ctx: &mut Self::Context) -> Self::Result {
         use super::schema::albums::dsl::*;

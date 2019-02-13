@@ -1,13 +1,11 @@
 use std::fs;
 use std::path::PathBuf;
 
-use exif::Tag;
 use image::GenericImageView;
 use actix_web::actix::Message;
 
 use crate::config::{Config, ThumbnailConfig};
 use crate::error::GalleryError;
-use super::helper::ExifExtractor;
 
 #[derive(Debug, Queryable)]
 pub struct PhotoThumbnail {
@@ -24,21 +22,6 @@ impl Message for GetPhotosThumbnail {
 }
 
 impl PhotoThumbnail {
-    pub fn from_path(path: PathBuf) -> Result<Self, GalleryError> {
-        let name = path.file_name()
-            .unwrap()
-            .to_os_string()
-            .into_string()
-            .unwrap();
-
-        let exif_map = Self::extract_exif(&path)?;
-
-        Ok(PhotoThumbnail {
-            name,
-            creation_date: Some(exif_map[&Tag::DateTimeOriginal].to_owned())
-        })
-    }
-
     pub fn create_image(path: &PathBuf, thumbnail_size: ThumbnailSize, config: &Config) -> Result<PathBuf, GalleryError> {
         let ThumbnailConfig { size, square, .. } = *thumbnail_size.get_thumbnail_config(config);
 
@@ -70,13 +53,6 @@ impl PhotoThumbnail {
         thumbnail_path.with_extension(extension)
     }
 }
-
-impl ExifExtractor for PhotoThumbnail {
-    const TAG_LIST: &'static [Tag] = &[
-        Tag::DateTimeOriginal
-    ];
-}
-
 
 pub enum ThumbnailSize {
     Small,

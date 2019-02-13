@@ -1,15 +1,16 @@
-use std::fs;
 use std::path::PathBuf;
 
-use actix_web::actix::Message;
-use diesel::result::Error as DieselError;
+use askama::Template;
+use actix_web::actix::{Addr, Message};
+use futures::prelude::*;
 
-use super::*;
+use super::db::DbExecutor;
 use super::schema::albums;
+use super::album_thumbnail::{AlbumThumbnail, GetAlbumsThumbnail};
+use super::photo_thumbnail::{PhotoThumbnail, GetPhotosThumbnail};
 use crate::utils;
 use crate::config::Config;
 use crate::error::GalleryError;
-use askama::Template;
 
 #[derive(Debug, Template)]
 #[template(path = "album.html")]
@@ -30,6 +31,45 @@ pub struct Album {
     pub parent_album_id: Option<String>,
 }
 
+impl AlbumTemplate {
+    pub fn get(path: PathBuf, db: Addr<DbExecutor>, config: Config) -> impl Future<Item = Self, Error = GalleryError> {
+        db.send(GetAlbum { path: path.clone() })
+            .map_err(|e| GalleryError::InternalError(Box::new(e)))
+            .flatten()
+            .and_then(move |album| {
+                let albums_tn_future = db.send(GetAlbumsThumbnail {
+                    parent_album_id: album.id.clone()
+                });
+                let photos_tn_future = db.send(GetPhotosThumbnail {
+                    parent_album_id: album.id.clone()
+                });
+                albums_tn_future
+                    .join3(photos_tn_future, Ok(album))
+                    .map_err(|e| GalleryError::InternalError(Box::new(e)))
+                    .and_then(move |(albums, photos, album)| {
+                        match (albums, photos) {
+                            (Ok(albums), Ok(photos)) => {
+                                let album_path = if path == PathBuf::from("") {
+                                    "".to_string()
+                                } else {
+                                    PathBuf::from("/").join(&path).to_str().unwrap().to_string()
+                                };
+
+                                Ok(AlbumTemplate {
+                                    name: album.name,
+                                    breadcrumb: utils::get_breadcrumb(&path, &config),
+                                    album_path: album_path,
+                                    albums: albums,
+                                    photos: photos,
+                                })
+                            },
+                            (Err(e), _) | (_, Err(e)) => Err(e)
+                        }
+                    })
+            })
+    }
+}
+
 pub struct CreateAlbum {
     pub name: String,
     pub parent_album_id: Option<String>,
@@ -47,7 +87,7 @@ pub struct GetAlbumId {
 pub struct GetRootAlbumId;
 
 impl Message for CreateAlbum {
-    type Result = Result<String, DieselError>;
+    type Result = Result<String, GalleryError>;
 }
 
 impl Message for GetAlbum {
@@ -55,51 +95,9 @@ impl Message for GetAlbum {
 }
 
 impl Message for GetAlbumId {
-    type Result = Result<Option<String>, DieselError>;
+    type Result = Result<Option<String>, GalleryError>;
 }
 
 impl Message for GetRootAlbumId {
-    type Result = Result<Option<String>, DieselError>;
-}
-
-impl AlbumTemplate {
-    pub fn from_path(path: PathBuf, config: &Config) -> Result<Self, GalleryError> {
-        let name = if let Some(file_name) = path.file_name() {
-            file_name.to_os_string().into_string().unwrap()
-        } else {
-            config.gallery_name.clone()
-        };
-
-        let album_path = if path == PathBuf::from("") {
-            "".to_string()
-        } else {
-            PathBuf::from("/").join(&path).to_str().unwrap().to_string()
-        };
-
-        let breadcrumb = utils::get_breadcrumb(&path, config);
-        let full_album_path = utils::get_album_canonical_path(path, config);
-
-        let mut albums = Vec::new();
-        let mut photos = Vec::new();
-
-        for entry in fs::read_dir(full_album_path)? {
-            let sub_path = entry?.path();
-            if sub_path.is_dir() {
-                albums.push(AlbumThumbnail::from_path(sub_path)?);
-            } else if sub_path.is_file() {
-                photos.push(PhotoThumbnail::from_path(sub_path)?);
-            }
-        }
-
-        albums.sort_by(|a, b| a.name.cmp(&b.name));
-        photos.sort_by(|a, b| a.name.cmp(&b.name));
-
-        Ok(AlbumTemplate {
-            name,
-            breadcrumb,
-            album_path,
-            albums,
-            photos,
-        })
-    }
+    type Result = Result<Option<String>, GalleryError>;
 }
