@@ -2,17 +2,25 @@ use std::fs;
 use std::path::PathBuf;
 
 use exif::Tag;
+use image::GenericImageView;
+use actix_web::actix::Message;
+
 use crate::config::{Config, ThumbnailConfig};
 use crate::error::GalleryError;
-
-use image::GenericImageView;
-
 use super::helper::ExifExtractor;
 
-#[derive(Debug)]
+#[derive(Debug, Queryable)]
 pub struct PhotoThumbnail {
     pub name: String,
-    pub creation_date: String,
+    pub creation_date: Option<String>,
+}
+
+pub struct GetPhotosThumbnail {
+    pub parent_album_id: String,
+}
+
+impl Message for GetPhotosThumbnail {
+    type Result = Result<Vec<PhotoThumbnail>, GalleryError>;
 }
 
 impl PhotoThumbnail {
@@ -27,7 +35,7 @@ impl PhotoThumbnail {
 
         Ok(PhotoThumbnail {
             name,
-            creation_date: exif_map[&Tag::DateTimeOriginal].to_owned()
+            creation_date: Some(exif_map[&Tag::DateTimeOriginal].to_owned())
         })
     }
 

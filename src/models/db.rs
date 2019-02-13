@@ -6,8 +6,10 @@ use diesel::result::Error as DieselError;
 use diesel::prelude::*;
 use diesel::r2d2::{Pool, ConnectionManager};
 
-use super::album::{NewAlbum, CreateAlbum, GetAlbumId, GetRootAlbumId};
+use super::album::{Album, CreateAlbum, GetAlbum, GetAlbumId, GetRootAlbumId};
 use super::photo::{NewPhoto, CreatePhoto, GetPhotoId};
+use super::album_thumbnail::{AlbumThumbnail, GetAlbumsThumbnail};
+use super::photo_thumbnail::{PhotoThumbnail, GetPhotosThumbnail};
 use crate::error::GalleryError;
 
 pub struct DbExecutor {
@@ -35,7 +37,7 @@ impl Handler<CreateAlbum> for DbExecutor {
 
         let uuid = uuid::Uuid::new_v4().to_string();
 
-        let new_album = NewAlbum {
+        let new_album = Album {
             id: uuid,
             name: msg.name,
             parent_album_id: msg.parent_album_id,
@@ -48,6 +50,29 @@ impl Handler<CreateAlbum> for DbExecutor {
         debug!("Inserting new album in database, {} -> \"{}\"", new_album.id, new_album.name);
 
         Ok(new_album.id)
+    }
+}
+
+impl Handler<GetAlbum> for DbExecutor {
+    type Result = Result<Album, GalleryError>;
+
+    fn handle(&mut self, msg: GetAlbum, _ctx: &mut Self::Context) -> Self::Result {
+        use super::schema::albums::dsl::*;
+
+        let conn = self.conn.get().unwrap();
+        let albums_names: Vec<_> = msg.path.iter().map(|e| e.to_str().unwrap()).collect();
+
+        let mut current_album = albums
+            .filter(parent_album_id.is_null())
+            .first::<Album>(&conn)?;
+
+        for album_name in albums_names {
+            current_album = Album::belonging_to(&current_album)
+                .filter(name.eq(album_name))
+                .first::<Album>(&conn)?;
+        }
+
+        Ok(current_album)
     }
 }
 
@@ -130,5 +155,33 @@ impl Handler<GetPhotoId> for DbExecutor {
             .pop();
 
         Ok(photo_id)
+    }
+}
+
+impl Handler<GetAlbumsThumbnail> for DbExecutor {
+    type Result = Result<Vec<AlbumThumbnail>, GalleryError>;
+
+    fn handle(&mut self, msg: GetAlbumsThumbnail, _ctx: &mut Self::Context) -> Self::Result {
+        use super::schema::albums::dsl::*;
+
+        let thumbnails = albums.filter(parent_album_id.eq(msg.parent_album_id))
+            .select((name,))
+            .load::<AlbumThumbnail>(&self.conn.get().unwrap())?;
+
+        Ok(thumbnails)
+    }
+}
+
+impl Handler<GetPhotosThumbnail> for DbExecutor {
+    type Result = Result<Vec<PhotoThumbnail>, GalleryError>;
+
+    fn handle(&mut self, msg: GetPhotosThumbnail, _ctx: &mut Self::Context) -> Self::Result {
+        use super::schema::photos::dsl::*;
+
+        let thumbnails = photos.filter(album_id.eq(msg.parent_album_id))
+            .select((name, creation_date))
+            .load::<PhotoThumbnail>(&self.conn.get().unwrap())?;
+
+        Ok(thumbnails)
     }
 }

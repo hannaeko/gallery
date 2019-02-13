@@ -1,8 +1,9 @@
+use std::fs;
 use std::path::PathBuf;
 use crate::config::Config;
 
 pub fn get_album_canonical_path(album_path: PathBuf, config: &Config) -> PathBuf {
-    let mut canonical_path = PathBuf::from(&config.storage_path);
+    let mut canonical_path = fs::canonicalize(&config.storage_path).unwrap();
     canonical_path.push(album_path);
     canonical_path
 }

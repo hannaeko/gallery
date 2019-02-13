@@ -13,17 +13,18 @@ use askama::Template;
 
 #[derive(Debug, Template)]
 #[template(path = "album.html")]
-pub struct Album {
-    name: String,
-    breadcrumb: Vec<(String, String)>,
-    album_path: String,
-    albums: Vec<AlbumThumbnail>,
-    photos: Vec<PhotoThumbnail>
+pub struct AlbumTemplate {
+    pub name: String,
+    pub breadcrumb: Vec<(String, String)>,
+    pub album_path: String,
+    pub albums: Vec<AlbumThumbnail>,
+    pub photos: Vec<PhotoThumbnail>
 }
 
-#[derive(Debug, Insertable)]
+#[derive(Debug, Insertable, Identifiable, Queryable, Associations)]
+#[belongs_to(Album, foreign_key = "parent_album_id")]
 #[table_name = "albums"]
-pub struct NewAlbum {
+pub struct Album {
     pub id: String,
     pub name: String,
     pub parent_album_id: Option<String>,
@@ -32,6 +33,10 @@ pub struct NewAlbum {
 pub struct CreateAlbum {
     pub name: String,
     pub parent_album_id: Option<String>,
+}
+
+pub struct GetAlbum {
+    pub path: PathBuf,
 }
 
 pub struct GetAlbumId {
@@ -45,6 +50,10 @@ impl Message for CreateAlbum {
     type Result = Result<String, DieselError>;
 }
 
+impl Message for GetAlbum {
+    type Result = Result<Album, GalleryError>;
+}
+
 impl Message for GetAlbumId {
     type Result = Result<Option<String>, DieselError>;
 }
@@ -53,7 +62,7 @@ impl Message for GetRootAlbumId {
     type Result = Result<Option<String>, DieselError>;
 }
 
-impl Album {
+impl AlbumTemplate {
     pub fn from_path(path: PathBuf, config: &Config) -> Result<Self, GalleryError> {
         let name = if let Some(file_name) = path.file_name() {
             file_name.to_os_string().into_string().unwrap()
@@ -85,7 +94,7 @@ impl Album {
         albums.sort_by(|a, b| a.name.cmp(&b.name));
         photos.sort_by(|a, b| a.name.cmp(&b.name));
 
-        Ok(Album {
+        Ok(AlbumTemplate {
             name,
             breadcrumb,
             album_path,
