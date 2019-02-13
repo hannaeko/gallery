@@ -80,7 +80,7 @@ impl Handler<StartIndexing> for IndexerActor {
 
         let root_id = match root_id_opt {
             Some(id) => id,
-            None => self.create_album(String::from(""), None)?
+            None => self.create_album(self.config.gallery_name.clone(), None)?
         };
 
         Self::index_children(storage_path, root_id, msg.indexer)?;
@@ -144,7 +144,8 @@ impl Handler<IndexFile> for IndexerActor {
             camera: utils::trim_one_char(&exif_map[&Tag::Model]),
         }).wait().map_err(|_| GalleryError::IndexingError)??;
 
-        PhotoThumbnail::create_image(msg.path, ThumbnailSize::Small, &self.config)?;
+        PhotoThumbnail::create_image(&msg.path, ThumbnailSize::Small, &self.config)?;
+        PhotoThumbnail::create_image(&msg.path, ThumbnailSize::Medium, &self.config)?;
 
         Ok(())
     }

@@ -39,7 +39,7 @@ impl PhotoThumbnail {
         })
     }
 
-    pub fn create_image(path: PathBuf, thumbnail_size: ThumbnailSize, config: &Config) -> Result<PathBuf, GalleryError> {
+    pub fn create_image(path: &PathBuf, thumbnail_size: ThumbnailSize, config: &Config) -> Result<PathBuf, GalleryError> {
         let ThumbnailConfig { size, square, .. } = *thumbnail_size.get_thumbnail_config(config);
 
         let thumbnail_path = Self::get_image_path(&path, thumbnail_size, &config);

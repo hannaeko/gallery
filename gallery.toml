@@ -9,7 +9,7 @@ square = true
 extension = "small.jpeg"
 
 [medium_thumbnail]
-size = 200
+size = 1000
 square = false
 extension = "medium.jpeg"
 
