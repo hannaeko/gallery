@@ -7,7 +7,7 @@ use diesel::prelude::*;
 use diesel::r2d2::{Pool, ConnectionManager};
 
 use super::album::{Album, AlbumResult, CreateAlbum, GetAlbum, GetAlbumId, GetRootAlbumId};
-use super::photo::{NewPhoto, CreatePhoto, GetPhotoId};
+use super::photo::{NewPhoto, CreatePhoto, GetPhoto, GetPhotoId, GetAdjacentPhotos};
 use super::album_thumbnail::{AlbumThumbnail, GetAlbumsThumbnail};
 use super::photo_thumbnail::{PhotoThumbnail, GetPhotosThumbnail};
 use crate::error::GalleryError;
@@ -78,7 +78,8 @@ impl Handler<GetAlbum> for DbExecutor {
                 Ok(album) => album,
                 Err(DieselError::NotFound) => return Err(GalleryError::AlbumNotFound {
                     missing_segments,
-                    last_album: current_album.id
+                    last_album: current_album.id,
+                    current_breadcrumb: breadcrumb,
                 }),
                 Err(e) => return Err(GalleryError::DbError(e))
             };
@@ -164,6 +165,20 @@ impl Handler<CreatePhoto> for DbExecutor {
     }
 }
 
+impl Handler<GetPhoto> for DbExecutor {
+    type Result = Result<NewPhoto, GalleryError>;
+
+    fn handle(&mut self, msg: GetPhoto, _ctx: &mut Self::Context) -> Self::Result {
+        use super::schema::photos::dsl::*;
+
+        let photo = photos
+            .filter(album_id.eq(&msg.album_id))
+            .filter(name.eq(&msg.name))
+            .first::<NewPhoto>(&self.conn.get().unwrap())?;
+        Ok(photo)
+    }
+}
+
 impl Handler<GetPhotoId> for DbExecutor {
     type Result = Result<Option<String>, GalleryError>;
 
@@ -181,6 +196,33 @@ impl Handler<GetPhotoId> for DbExecutor {
     }
 }
 
+impl Handler<GetAdjacentPhotos> for DbExecutor {
+    type Result = Result<(Option<String>, Option<String>), GalleryError>;
+
+    fn handle(&mut self, msg: GetAdjacentPhotos, _ctx: &mut Self::Context) -> Self::Result {
+        use super::schema::photos::dsl::*;
+        let conn = self.conn.get().unwrap();
+
+        let previous = photos.filter(album_id.eq(&msg.album_id))
+            .filter(name.lt(&msg.name))
+            .select(name)
+            .order(name.desc())
+            .limit(1)
+            .load::<String>(&conn)?
+            .pop();
+
+        let next = photos.filter(album_id.eq(&msg.album_id))
+            .filter(name.gt(&msg.name))
+            .select(name)
+            .order(name.asc())
+            .limit(1)
+            .load::<String>(&conn)?
+            .pop();
+
+        Ok((previous, next))
+    }
+}
+
 impl Handler<GetAlbumsThumbnail> for DbExecutor {
     type Result = Result<Vec<AlbumThumbnail>, GalleryError>;
 
@@ -189,6 +231,7 @@ impl Handler<GetAlbumsThumbnail> for DbExecutor {
 
         let thumbnails = albums.filter(parent_album_id.eq(msg.parent_album_id))
             .select((name,))
+            .order(name.asc())
             .load::<AlbumThumbnail>(&self.conn.get().unwrap())?;
 
         Ok(thumbnails)
@@ -203,6 +246,7 @@ impl Handler<GetPhotosThumbnail> for DbExecutor {
 
         let thumbnails = photos.filter(album_id.eq(msg.parent_album_id))
             .select((name, creation_date))
+            .order(name.asc())
             .load::<PhotoThumbnail>(&self.conn.get().unwrap())?;
 
         Ok(thumbnails)

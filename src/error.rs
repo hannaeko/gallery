@@ -23,6 +23,7 @@ pub enum GalleryError {
     AlbumNotFound {
         missing_segments: u8,
         last_album: String,
+        current_breadcrumb: Vec<(String, String)>,
     }
 }
 

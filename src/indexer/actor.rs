@@ -133,13 +133,13 @@ impl Handler<IndexFile> for IndexerActor {
             name: name,
             album_id: msg.parent,
 
-            creation_date: exif_map[&Tag::DateTimeOriginal].to_owned(),
-            flash: exif_map[&Tag::Flash].to_owned(),
-            exposure_time: exif_map[&Tag::ExposureTime].to_owned(),
-            aperture: exif_map[&Tag::FNumber].to_owned(),
-            focal_length: exif_map[&Tag::FocalLength].to_owned(),
-            focal_length_in_35mm: exif_map[&Tag::FocalLengthIn35mmFilm].to_owned(),
-            camera: utils::trim_one_char(&exif_map[&Tag::Model]),
+            creation_date: Some(exif_map[&Tag::DateTimeOriginal].to_owned()),
+            flash: Some(exif_map[&Tag::Flash].to_owned()),
+            exposure_time: Some(exif_map[&Tag::ExposureTime].to_owned()),
+            aperture: Some(exif_map[&Tag::FNumber].to_owned()),
+            focal_length: Some(exif_map[&Tag::FocalLength].to_owned()),
+            focal_length_in_35mm: Some(exif_map[&Tag::FocalLengthIn35mmFilm].to_owned()),
+            camera: Some(utils::trim_one_char(&exif_map[&Tag::Model])),
         }).wait()??;
 
         PhotoThumbnail::create_image(&msg.path, ThumbnailSize::Small, &self.config)?;
