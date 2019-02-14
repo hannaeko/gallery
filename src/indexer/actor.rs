@@ -128,19 +128,19 @@ impl Handler<IndexFile> for IndexerActor {
             return Ok(());
         }
 
-        let exif_map = Photo::extract_exif(&msg.path)?;
+        let mut exif_map = Photo::extract_exif(&msg.path)?;
 
         self.db.send(CreatePhoto {
             name: name,
             album_id: msg.parent,
 
-            creation_date: Some(exif_map[&Tag::DateTimeOriginal].to_owned()),
-            flash: Some(exif_map[&Tag::Flash].to_owned()),
-            exposure_time: Some(exif_map[&Tag::ExposureTime].to_owned()),
-            aperture: Some(exif_map[&Tag::FNumber].to_owned()),
-            focal_length: Some(exif_map[&Tag::FocalLength].to_owned()),
-            focal_length_in_35mm: Some(exif_map[&Tag::FocalLengthIn35mmFilm].to_owned()),
-            camera: Some(utils::trim_one_char(&exif_map[&Tag::Model])),
+            creation_date: exif_map.remove(&Tag::DateTimeOriginal),
+            flash: exif_map.remove(&Tag::Flash),
+            exposure_time: exif_map.remove(&Tag::ExposureTime),
+            aperture: exif_map.remove(&Tag::FNumber),
+            focal_length: exif_map.remove(&Tag::FocalLength),
+            focal_length_in_35mm: exif_map.remove(&Tag::FocalLengthIn35mmFilm),
+            camera: exif_map.remove(&Tag::Model).map(utils::trim_one_char),
         }).wait()??;
 
         PhotoThumbnail::create_image(&msg.path, ThumbnailSize::Small, &self.config)?;

@@ -18,7 +18,7 @@ pub fn get_file_name_string<P: AsRef<Path>>(path: P) -> Result<String, GalleryEr
         .map_err(|_| GalleryError::InvalidFileName)
 }
 
-pub fn trim_one_char(s: &String) -> String {
+pub fn trim_one_char(s: String) -> String {
     if s.len() < 2 {
         return s.to_string();
     } else {

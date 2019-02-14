@@ -1,5 +1,3 @@
-use std::path::PathBuf;
-
 use actix_web::actix::{Addr, Message};
 use futures::future::Future;
 use askama::Template;
@@ -10,22 +8,18 @@ use super::schema::photos;
 use super::helper::ExifExtractor;
 use crate::error::GalleryError;
 
-#[derive(Debug, Template, Default)]
+#[derive(Debug, Template)]
 #[template(path = "photo.html")]
 pub struct PhotoTemplate {
+    // Keeping name here because currently required for breadcrumb templating
     name: String,
+
+    photo: Photo,
+
     breadcrumb: Vec<(String, String)>,
-    photo_full_path: PathBuf,
     album_path: String,
     previous_photo: Option<String>,
     next_photo: Option<String>,
-    creation_date: String,
-    flash: String,
-    exposure_time: String,
-    aperture: String,
-    focal_length: String,
-    focal_length_in_35mm: String,
-    camera: String,
 }
 
 #[derive(Debug, Insertable, Queryable)]
@@ -110,21 +104,14 @@ impl PhotoTemplate {
                         let album_path = (&breadcrumb[breadcrumb.len() - 1].0).to_owned();
 
                         Ok(PhotoTemplate {
-                            name: photo.name,
+                            name: photo.name.clone(),
+
+                            photo: photo,
                             breadcrumb: breadcrumb,
-                            photo_full_path: PathBuf::from(""),
                             album_path: album_path,
 
                             previous_photo: prev,
                             next_photo: next,
-
-                            creation_date: photo.creation_date.unwrap(),
-                            flash: photo.flash.unwrap(),
-                            exposure_time: photo.exposure_time.unwrap(),
-                            aperture: photo.aperture.unwrap(),
-                            focal_length: photo.focal_length.unwrap(),
-                            focal_length_in_35mm: photo.focal_length_in_35mm.unwrap(),
-                            camera: photo.camera.unwrap(),
                         })
                     },
                     Err(e) => Err(e)

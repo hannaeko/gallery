@@ -14,7 +14,7 @@
       <span class="previous"></span>
     {% endif %}
 
-    <img src="{{album_path}}/{{name}}/medium">
+    <img src="{{album_path}}/{{photo.name}}/medium">
 
     {% if next_photo.is_some() %}
       <a aria-label="Next photo" title="Go to next photo" class="next" href="{{ album_path }}/{{ next_photo.as_ref().unwrap() }}">
@@ -28,17 +28,17 @@
     <h2>Metadata</h2>
     <dl>
       <dt>Date</dt>
-      <dd>{{ creation_date }}</dd>
+      <dd>{{ photo.creation_date.as_ref().unwrap() }}</dd>
       <dt>Camera</dt>
-      <dd>{{ camera }}</dd>
+      <dd>{{ photo.camera.as_ref().unwrap() }}</dd>
       <dt>Exposure time</dt>
-      <dd>{{ exposure_time }} s</dd>
+      <dd>{{ photo.exposure_time.as_ref().unwrap() }} s</dd>
       <dt>Aperture</dt>
-      <dd>{{ aperture|safe }}</dd>
+      <dd>{{ photo.aperture.as_ref().unwrap()|safe }}</dd>
       <dt>Focal length</dt>
-      <dd>{{ focal_length }} mm (35 mm equ.: {{ focal_length_in_35mm }} mm)</dd>
+      <dd>{{ photo.focal_length.as_ref().unwrap() }} mm (35 mm equ.: {{ photo.focal_length_in_35mm.as_ref().unwrap() }} mm)</dd>
       <dt>Flash</dt>
-      <dd>{{ flash }}</dd>
+      <dd>{{ photo.flash.as_ref().unwrap() }}</dd>
     </dl>
   </div>
 {% endblock %}
