@@ -3,6 +3,7 @@ use futures::future::Future;
 use askama::Template;
 use exif::Tag;
 
+use gallery_derive::ExifExtractor;
 use super::db::DbExecutor;
 use super::schema::photos;
 use super::helper::ExifExtractor;
@@ -22,19 +23,38 @@ pub struct PhotoTemplate {
     next_photo: Option<String>,
 }
 
-#[derive(Debug, Insertable, Queryable)]
+impl ExifExtractor for Photo {
+    const TAG_LIST: &'static [Tag] = &[
+        Tag::DateTimeOriginal,
+        Tag::Flash,
+        Tag::ExposureTime,
+        Tag::FNumber,
+        Tag::FocalLength,
+        Tag::FocalLengthIn35mmFilm,
+        Tag::Model,
+    ];
+}
+
+#[derive(Debug, Insertable, Queryable, ExifExtractor)]
 #[table_name = "photos"]
 pub struct Photo {
     pub id: String,
     pub name: String,
     pub album_id: String,
 
+    #[exif(tag = "DateTimeOriginal", name = "Date")]
     pub creation_date: Option<String>,
+    #[exif(tag = "Flash", name = "Flash" )]
     pub flash: Option<String>,
+    #[exif(tag = "ExposureTime", name = "Exposure")]
     pub exposure_time: Option<String>,
+    #[exif(tag = "FNumber", name = "Aperture")]
     pub aperture: Option<String>,
+    #[exif(tag = "FocalLength", name = "Focal length")]
     pub focal_length: Option<String>,
+    #[exif(tag = "FocalLengthIn35mmFilm", name = "Focal length in 35mm")]
     pub focal_length_in_35mm: Option<String>,
+    #[exif(tag = "Model", name = "Camera")]
     pub camera: Option<String>,
 }
 
@@ -118,16 +138,4 @@ impl PhotoTemplate {
                 }
             })
     }
-}
-
-impl ExifExtractor for Photo {
-    const TAG_LIST: &'static [Tag] = &[
-        Tag::DateTimeOriginal,
-        Tag::Flash,
-        Tag::ExposureTime,
-        Tag::FNumber,
-        Tag::FocalLength,
-        Tag::FocalLengthIn35mmFilm,
-        Tag::Model,
-    ];
 }
