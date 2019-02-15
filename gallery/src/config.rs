@@ -1,5 +1,6 @@
 use std::fs::File;
 use std::io::prelude::*;
+use std::path::Path;
 
 use toml;
 use serde::Deserialize;
@@ -31,7 +32,8 @@ pub struct Config {
 
 impl Config {
     pub fn load() -> Self {
-        let mut config_file = File::open("gallery.toml").expect("Could not find configuration file.");
+        let config_path  = Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap().join("gallery.toml");
+        let mut config_file = File::open(config_path).expect("Could not find configuration file.");
 
         let mut content = String::new();
         config_file.read_to_string(&mut content).expect("Something went wrong reading the configuration.");

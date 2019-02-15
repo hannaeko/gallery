@@ -1,19 +1,6 @@
-[package]
-name = "gallery"
-version = "0.1.0"
-authors = ["BlackSponge <blacksponge@tuta.io>"]
-edition = "2018"
+[workspace]
 
-[dependencies]
-actix-web = "0.7"
-futures = "0.1.25"
-env_logger = "0.6.0"
-kamadak-exif = "0.3.1"
-image = "0.21.0"
-failure = "0.1.5"
-toml = "0.4"
-serde = { version = "1.0", features = ["derive"] }
-askama = { version = "0.7", features = ["with-actix-web"] }
-diesel = { version = "1.4", features = ["sqlite", "r2d2"] }
-log = "0.4"
-uuid = { version = "0.7", features = ["v4"] }
+members = [
+  "gallery",
+  "gallery_derive",
+]
