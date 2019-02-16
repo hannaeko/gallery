@@ -15,22 +15,30 @@ pub fn exif_extractor_derive(input: TokenStream) -> TokenStream {
 
 fn impl_plouf(ast: &DeriveInput) -> TokenStream {
     let name = &ast.ident;
-    let (fields, tags, names) = match ast.data {
+    let (fields, tags, _names) = match ast.data {
         Data::Struct(ref strukt) => find_tags(&strukt),
         _ => panic!("ExifExtractor should be derived on struct")
     };
 
+    let tags2 = tags.clone();
+
     let gen = quote! {
         impl ExifExtractor for #name {
-            const TAG_LIST: &'static [Tag] = &[
-                #( Tag::#tags, )*
+            const TAG_LIST: &'static [exif::Tag] = &[
+                #( exif::Tag::#tags, )*
             ];
+
+            fn extract_exif(&mut self, path: &std::path::PathBuf) -> std::io::Result<()> {
+                let mut exif_map = Self::extract_exif_map(path)?;
+                #( self.#fields = exif_map.remove(&exif::Tag::#tags2); )*
+                Ok(())
+            }
         }
     };
     gen.into()
 }
 
-fn find_tags(strukt: &DataStruct) -> (Vec<Ident>, Vec<Ident>, Vec<Option<String>>) {
+fn find_tags(strukt: &DataStruct) -> (Vec<Ident>, Vec<Ident>, Vec<String>) {
     let iter = strukt.fields
         .iter()
         .filter_map(build_tag_field);
@@ -47,8 +55,7 @@ fn find_tags(strukt: &DataStruct) -> (Vec<Ident>, Vec<Ident>, Vec<Option<String>
     (fields, tags, names)
 }
 
-fn build_tag_field(field: &Field) -> Option<(Ident, Ident, Option<String>)> {
-    println!("{:#?}", field);
+fn build_tag_field(field: &Field) -> Option<(Ident, Ident, String)> {
     let mut tag = None;
     let mut name = None;
 
@@ -64,11 +71,11 @@ fn build_tag_field(field: &Field) -> Option<(Ident, Ident, Option<String>)> {
         }
     }
 
-    if tag.is_some() {
+    if tag.is_some() && name.is_some() {
         Some((
             field.ident.as_ref().unwrap().to_owned(),
             Ident::new(tag.unwrap().as_str(), Span::call_site()),
-            name
+            name.unwrap()
         ))
     } else {
         None

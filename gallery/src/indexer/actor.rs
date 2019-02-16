@@ -3,7 +3,6 @@ use std::fs;
 use std::path::PathBuf;
 
 use actix_web::actix::{Actor, Addr, SyncContext, SyncArbiter, Handler};
-use exif::Tag;
 use futures::future::Future;
 
 use crate::models::db::DbExecutor;
@@ -128,20 +127,16 @@ impl Handler<IndexFile> for IndexerActor {
             return Ok(());
         }
 
-        let mut exif_map = Photo::extract_exif(&msg.path)?;
-
-        self.db.send(CreatePhoto {
-            name: name,
+        let mut photo = Photo {
+            name,
             album_id: msg.parent,
+            ..Default::default()
+        };
 
-            creation_date: exif_map.remove(&Tag::DateTimeOriginal),
-            flash: exif_map.remove(&Tag::Flash),
-            exposure_time: exif_map.remove(&Tag::ExposureTime),
-            aperture: exif_map.remove(&Tag::FNumber),
-            focal_length: exif_map.remove(&Tag::FocalLength),
-            focal_length_in_35mm: exif_map.remove(&Tag::FocalLengthIn35mmFilm),
-            camera: exif_map.remove(&Tag::Model).map(utils::trim_one_char),
-        }).wait()??;
+        photo.extract_exif(&msg.path)?;
+        photo.camera = photo.camera.map(utils::trim_one_char);
+
+        self.db.send(CreatePhoto { photo: photo }).wait()??;
 
         PhotoThumbnail::create_image(&msg.path, ThumbnailSize::Small, &self.config)?;
         PhotoThumbnail::create_image(&msg.path, ThumbnailSize::Medium, &self.config)?;

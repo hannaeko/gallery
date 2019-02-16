@@ -1,7 +1,6 @@
 use actix_web::actix::{Addr, Message};
 use futures::future::Future;
 use askama::Template;
-use exif::Tag;
 
 use gallery_derive::ExifExtractor;
 use super::db::DbExecutor;
@@ -23,19 +22,7 @@ pub struct PhotoTemplate {
     next_photo: Option<String>,
 }
 
-impl ExifExtractor for Photo {
-    const TAG_LIST: &'static [Tag] = &[
-        Tag::DateTimeOriginal,
-        Tag::Flash,
-        Tag::ExposureTime,
-        Tag::FNumber,
-        Tag::FocalLength,
-        Tag::FocalLengthIn35mmFilm,
-        Tag::Model,
-    ];
-}
-
-#[derive(Debug, Insertable, Queryable, ExifExtractor)]
+#[derive(Debug, Insertable, Queryable, ExifExtractor, Default)]
 #[table_name = "photos"]
 pub struct Photo {
     pub id: String,
@@ -59,16 +46,7 @@ pub struct Photo {
 }
 
 pub struct CreatePhoto {
-    pub name: String,
-    pub album_id: String,
-
-    pub creation_date: Option<String>,
-    pub flash: Option<String>,
-    pub exposure_time: Option<String>,
-    pub aperture: Option<String>,
-    pub focal_length: Option<String>,
-    pub focal_length_in_35mm: Option<String>,
-    pub camera: Option<String>,
+    pub photo: Photo,
 }
 
 pub struct GetPhoto {

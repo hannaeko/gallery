@@ -141,19 +141,8 @@ impl Handler<CreatePhoto> for DbExecutor {
 
         let uuid = uuid::Uuid::new_v4().to_string();
 
-        let new_photo = Photo {
-            id: uuid,
-            name: msg.name,
-            album_id: msg.album_id,
-
-            creation_date: msg.creation_date,
-            flash: msg.flash,
-            exposure_time: msg.exposure_time,
-            aperture: msg.aperture,
-            focal_length: msg.focal_length,
-            focal_length_in_35mm: msg.focal_length_in_35mm,
-            camera: msg.camera,
-        };
+        let mut new_photo = msg.photo;
+        new_photo.id = uuid;
 
         diesel::insert_into(photos::table)
             .values(&new_photo)
