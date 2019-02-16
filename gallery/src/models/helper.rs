@@ -7,7 +7,7 @@ pub trait ExifExtractor {
     const TAG_LIST: &'static [exif::Tag];
 
     fn extract_exif_map(path: &PathBuf) -> io::Result<HashMap<exif::Tag, String>> {
-        let mut tag_map: HashMap<_,_> = Self::TAG_LIST.iter().map(|tag| (*tag, String::from(""))).collect();
+        let mut tag_map = HashMap::new();
 
         let file = fs::File::open(path)?;
         let res_reader = exif::Reader::new(&mut io::BufReader::new(&file));
@@ -15,9 +15,9 @@ pub trait ExifExtractor {
             return Ok(tag_map)
         }
         let reader = res_reader.unwrap();
-        for (tag, value) in tag_map.iter_mut() {
+        for tag in Self::TAG_LIST {
             if let Some(field) = reader.get_field(*tag, false) {
-                *value = field.value.display_as(*tag).to_string();
+                tag_map.insert(*tag, field.value.display_as(*tag).to_string());
             }
         }
         Ok(tag_map)
