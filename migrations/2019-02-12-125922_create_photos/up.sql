@@ -4,12 +4,12 @@ create table photos (
   album_id varchar (36) not null,
   -- metadata
   creation_date datetime,
-  flash varchar (255),
-  aperture varchar (10),
+  camera varchar (60),
   exposure_time varchar (10),
+  aperture varchar (10),
   focal_length varchar (10),
   focal_length_in_35mm varchar (10),
-  camera varchar (60),
+  flash varchar (255),
   primary key (id),
   foreign key (album_id) references photos(id)
 );

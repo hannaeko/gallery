@@ -31,8 +31,8 @@ pub struct Photo {
 
     #[exif(tag = "DateTimeOriginal", name = "Date")]
     pub creation_date: Option<String>,
-    #[exif(tag = "Flash", name = "Flash" )]
-    pub flash: Option<String>,
+    #[exif(tag = "Model", name = "Camera")]
+    pub camera: Option<String>,
     #[exif(tag = "ExposureTime", name = "Exposure")]
     pub exposure_time: Option<String>,
     #[exif(tag = "FNumber", name = "Aperture")]
@@ -41,8 +41,8 @@ pub struct Photo {
     pub focal_length: Option<String>,
     #[exif(tag = "FocalLengthIn35mmFilm", name = "Focal length in 35mm")]
     pub focal_length_in_35mm: Option<String>,
-    #[exif(tag = "Model", name = "Camera")]
-    pub camera: Option<String>,
+    #[exif(tag = "Flash", name = "Flash" )]
+    pub flash: Option<String>,
 }
 
 pub struct CreatePhoto {

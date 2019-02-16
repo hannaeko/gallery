@@ -27,18 +27,10 @@
   <div class="metadata-container">
     <h2>Metadata</h2>
     <dl>
-      <dt>Date</dt>
-      <dd>{{ photo.creation_date.as_ref().unwrap() }}</dd>
-      <dt>Camera</dt>
-      <dd>{{ photo.camera.as_ref().unwrap() }}</dd>
-      <dt>Exposure time</dt>
-      <dd>{{ photo.exposure_time.as_ref().unwrap() }} s</dd>
-      <dt>Aperture</dt>
-      <dd>{{ photo.aperture.as_ref().unwrap()|safe }}</dd>
-      <dt>Focal length</dt>
-      <dd>{{ photo.focal_length.as_ref().unwrap() }} mm (35 mm equ.: {{ photo.focal_length_in_35mm.as_ref().unwrap() }} mm)</dd>
-      <dt>Flash</dt>
-      <dd>{{ photo.flash.as_ref().unwrap() }}</dd>
+      {% for named_value in photo.get_named_metadata() %}
+        <dt>{{ named_value.0 }}</dt>
+        <dd>{{ named_value.1 }}</dd>
+      {% endfor %}
     </dl>
   </div>
 {% endblock %}

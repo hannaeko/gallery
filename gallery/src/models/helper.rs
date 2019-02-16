@@ -24,4 +24,6 @@ pub trait ExifExtractor {
     }
 
     fn extract_exif(&mut self, path: &PathBuf) -> io::Result<()>;
+
+    fn get_named_metadata(&self) -> Vec<(&str, String)>;
 }
