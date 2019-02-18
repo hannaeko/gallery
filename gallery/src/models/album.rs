@@ -36,9 +36,7 @@ pub struct AlbumResult {
 
 impl AlbumTemplate {
     pub fn get(path: PathBuf, db: Addr<DbExecutor>) -> impl Future<Item = Self, Error = GalleryError> {
-        db.send(GetAlbum { path: path.clone() })
-            .from_err::<GalleryError>()
-            .flatten()
+        Album::get(path.clone(), db.clone())
             .and_then(move |res| {
                 let albums_tn_future = db.send(GetAlbumsThumbnail {
                     parent_album_id: res.album.id.clone()
@@ -72,6 +70,14 @@ impl AlbumTemplate {
         } else {
             PathBuf::from("/").join(&path).to_str().unwrap().to_string()
         }
+    }
+}
+
+impl Album {
+    pub fn get(path: PathBuf, db: Addr<DbExecutor>) -> impl Future<Item = AlbumResult, Error = GalleryError> {
+        db.send(GetAlbum { path: path.clone() })
+            .from_err::<GalleryError>()
+            .flatten()
     }
 }
 

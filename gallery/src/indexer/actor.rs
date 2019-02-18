@@ -140,8 +140,8 @@ impl Handler<IndexFile> for IndexerActor {
         debug!("Generating thumbnails...");
         let hash = Photo::compute_hash(&msg.path)?;
 
-        PhotoThumbnail::create_image(&msg.path, ThumbnailSize::Small, &self.config)?;
-        PhotoThumbnail::create_image(&msg.path, ThumbnailSize::Medium, &self.config)?;
+        PhotoThumbnail::create_image(&msg.path, &hash, ThumbnailSize::Small, &self.config)?;
+        PhotoThumbnail::create_image(&msg.path, &hash, ThumbnailSize::Medium, &self.config)?;
 
         let mut photo = Photo {
             name,

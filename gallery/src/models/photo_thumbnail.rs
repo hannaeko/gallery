@@ -22,10 +22,10 @@ impl Message for GetPhotosThumbnail {
 }
 
 impl PhotoThumbnail {
-    pub fn create_image(path: &PathBuf, thumbnail_size: ThumbnailSize, config: &Config) -> Result<PathBuf, GalleryError> {
+    pub fn create_image(path: &PathBuf, hash: &String, thumbnail_size: ThumbnailSize, config: &Config) -> Result<PathBuf, GalleryError> {
         let ThumbnailConfig { size, square, .. } = *thumbnail_size.get_thumbnail_config(config);
 
-        let thumbnail_path = Self::get_image_path(&path, thumbnail_size, &config);
+        let thumbnail_path = Self::get_image_path(&hash, thumbnail_size, &config);
 
         let img = image::open(&path)?;
         let (width, height) = img.dimensions();
@@ -44,12 +44,11 @@ impl PhotoThumbnail {
         Ok(thumbnail_path)
     }
 
-    pub fn get_image_path(photo_path: &PathBuf, thumbnail_size: ThumbnailSize, config: &Config) -> PathBuf {
+    pub fn get_image_path(hash: &String, thumbnail_size: ThumbnailSize, config: &Config) -> PathBuf {
         let ThumbnailConfig { extension, .. } = thumbnail_size.get_thumbnail_config(config);
 
         let mut thumbnail_path = PathBuf::from(&config.cache_path);
-
-        thumbnail_path.push(photo_path.strip_prefix(&fs::canonicalize(&config.storage_path).unwrap()).unwrap());
+        thumbnail_path.push(hash);
         thumbnail_path.with_extension(extension)
     }
 }

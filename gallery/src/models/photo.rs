@@ -54,11 +54,7 @@ impl PhotoTemplate {
     pub fn get(name: String, album_id: String, breadcrumb: Vec<(String, String)>, db: Addr<DbExecutor>)
         -> impl Future<Item = Self, Error = GalleryError>
     {
-        db.send(GetPhoto {
-            name: name,
-            album_id: album_id,
-        }).from_err::<GalleryError>()
-            .flatten()
+        Photo::get(name, album_id, db.clone())
             .and_then(move |photo| {
                 let adj_future = db.send(GetAdjacentPhotos {
                     name: photo.name.clone(),
@@ -89,6 +85,14 @@ impl PhotoTemplate {
 }
 
 impl Photo {
+    pub fn get(name: String, album_id: String, db: Addr<DbExecutor>) -> impl Future<Item = Self, Error = GalleryError> {
+        db.send(GetPhoto {
+            name: name,
+            album_id: album_id,
+        }).from_err::<GalleryError>()
+            .flatten()
+    }
+
     pub fn compute_hash(path: &PathBuf) -> io::Result<String> {
         let mut hasher = Sha256::new();
         let mut file = fs::File::open(&path)?;

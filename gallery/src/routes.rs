@@ -2,7 +2,7 @@ use actix_web::{HttpRequest, Result, Either, fs::NamedFile, AsyncResponder, Stat
 use futures::future::{self, Future};
 
 use crate::utils::*;
-use crate::models::{AlbumTemplate, PhotoTemplate, PhotoThumbnail, ThumbnailSize};
+use crate::models::{Album, AlbumTemplate, Photo, PhotoTemplate, PhotoThumbnail, ThumbnailSize};
 use crate::error::GalleryError;
 use crate::common::AppState;
 
@@ -37,17 +37,34 @@ pub fn gallery_route((req, state): (HttpRequest<AppState>, State<AppState>))
         }).responder()
 }
 
-pub fn small_thumbnail_route(req: &HttpRequest<AppState>) -> Result<NamedFile> {
-    let state = req.state();
-    let path = get_album_canonical_path(req.match_info().query("path")?, &state.config);
+pub fn small_thumbnail_route((req, state): (HttpRequest<AppState>, State<AppState>)) -> Box<Future<Item = NamedFile, Error = GalleryError>> {
+    let path: std::path::PathBuf = req.match_info().query("path").unwrap();
 
-    Ok(NamedFile::open(PhotoThumbnail::get_image_path(
-        &path,
-        ThumbnailSize::Small,
-        &state.config
-    ))?)
+    let name = match get_file_name_string(&path) {
+        Ok(name) => name,
+        Err(e) => return Box::new(future::err(GalleryError::from(e)))
+    };
+
+    let cloned_state = state.clone();
+
+    Album::get(path.parent().unwrap().to_path_buf(), state.db.clone())
+        .and_then(move |result| {
+            Photo::get(name, result.album.id, state.db.clone())
+        })
+        .and_then(move |photo| -> Box<Future<Item = NamedFile, Error = GalleryError>> {
+            let res = NamedFile::open(PhotoThumbnail::get_image_path(
+                &photo.hash,
+                ThumbnailSize::Small,
+                &cloned_state.config
+            ));
+            match res {
+                Ok(res) => Box::new(future::result(Ok(res))),
+                Err(e) => Box::new(future::err(GalleryError::from(e)))
+            }
+        })
+        .responder()
 }
-
+/*
 pub fn medium_thumbnail_route(req: &HttpRequest<AppState>) -> Result<NamedFile> {
     let state = req.state();
     let path = get_album_canonical_path(req.match_info().query("path")?, &state.config);
@@ -58,7 +75,7 @@ pub fn medium_thumbnail_route(req: &HttpRequest<AppState>) -> Result<NamedFile> 
         &state.config
     ))?)
 }
-
+*/
 pub fn full_photo_route(req: &HttpRequest<AppState>) -> Result<NamedFile> {
     let state = req.state();
     let path = get_album_canonical_path(req.match_info().query("path")?, &state.config);
