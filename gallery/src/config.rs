@@ -1,6 +1,7 @@
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
+use std::collections::HashSet;
 
 use toml;
 use serde::Deserialize;
@@ -23,6 +24,8 @@ pub struct Config {
 
     pub storage_path: String,
     pub cache_path: String,
+
+    pub allowed_extensions: HashSet<String>,
 
     pub small_thumbnail: ThumbnailConfig,
     pub medium_thumbnail: ThumbnailConfig,

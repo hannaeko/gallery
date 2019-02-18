@@ -69,7 +69,7 @@ impl Handler<StartIndexing> for IndexerActor {
     type Result = Result<(), GalleryError>;
 
     fn handle(&mut self, msg: StartIndexing, _ctx: &mut Self::Context) -> Self::Result {
-        debug!("Starting building index.");
+        info!("Starting building index.");
 
         let storage_path = fs::canonicalize(msg.storage_path)?;
 
@@ -90,7 +90,7 @@ impl Handler<IndexDirectory> for IndexerActor {
     type Result = Result<(), GalleryError>;
 
     fn handle(&mut self, msg: IndexDirectory, _ctx: &mut Self::Context) -> Self::Result {
-        debug!("Indexing directory {:?}", msg.path);
+        info!("Indexing directory {:?}", msg.path);
 
         let name =  utils::get_file_name_string(&msg.path)?;
 
@@ -114,7 +114,16 @@ impl Handler<IndexFile> for IndexerActor {
     type Result = Result<(), GalleryError>;
 
     fn handle(&mut self, msg: IndexFile, _ctx: &mut Self::Context) -> Self::Result {
-        debug!("Indexing file {:?}", msg.path);
+        info!("Indexing file {:?}", msg.path);
+        let is_valid_extension = msg.path.extension()
+            .map(|ext| self.config
+                    .allowed_extensions
+                    .contains(&ext.to_string_lossy().to_string().to_lowercase()));
+
+        if is_valid_extension != Some(true) {
+            warn!("Invalid extension, skipping file");
+            return Err(GalleryError::InvalidFileName);
+        }
 
         let name = utils::get_file_name_string(&msg.path)?;
 
@@ -127,6 +136,10 @@ impl Handler<IndexFile> for IndexerActor {
             return Ok(());
         }
 
+        debug!("Generating thumbnails...");
+        PhotoThumbnail::create_image(&msg.path, ThumbnailSize::Small, &self.config)?;
+        PhotoThumbnail::create_image(&msg.path, ThumbnailSize::Medium, &self.config)?;
+
         let mut photo = Photo {
             name,
             album_id: msg.parent,
@@ -137,9 +150,6 @@ impl Handler<IndexFile> for IndexerActor {
         photo.camera = photo.camera.map(utils::trim_one_char);
 
         self.db.send(CreatePhoto { photo: photo }).wait()??;
-
-        PhotoThumbnail::create_image(&msg.path, ThumbnailSize::Small, &self.config)?;
-        PhotoThumbnail::create_image(&msg.path, ThumbnailSize::Medium, &self.config)?;
 
         Ok(())
     }

@@ -3,6 +3,8 @@ gallery_name = "Gallery"
 storage_path = "./storage"
 cache_path = "./cache"
 
+allowed_extensions = ["jpeg", "jpg"]
+
 [small_thumbnail]
 size = 200
 square = true
