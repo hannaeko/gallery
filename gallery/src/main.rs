@@ -17,6 +17,7 @@ mod config;
 mod error;
 mod common;
 mod indexer;
+mod handlers;
 
 use config::Config;
 use common::AppState;
