@@ -2,6 +2,7 @@ create table photos (
   id varchar (36) not null,
   name varchar (255) not null,
   album_id varchar (36) not null,
+  hash varchar (256) not null,
   -- metadata
   creation_date datetime,
   camera varchar (60),

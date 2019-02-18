@@ -28,6 +28,7 @@ pub struct Photo {
     pub id: String,
     pub name: String,
     pub album_id: String,
+    pub hash: String,
 
     #[exif(tag = "DateTimeOriginal", name = "Date")]
     pub creation_date: Option<String>,

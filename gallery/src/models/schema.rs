@@ -11,6 +11,7 @@ table! {
         id -> Text,
         name -> Text,
         album_id -> Text,
+        hash -> Text,
         creation_date -> Nullable<Timestamp>,
         camera -> Nullable<Text>,
         exposure_time -> Nullable<Text>,
