@@ -17,4 +17,5 @@ askama = { version = "0.7", features = ["with-actix-web"] }
 diesel = { version = "1.4", features = ["sqlite", "r2d2"] }
 log = "0.4"
 uuid = { version = "0.7", features = ["v4"] }
+sha2 = "0.8"
 gallery_derive = { path = "../gallery_derive"}

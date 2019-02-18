@@ -133,15 +133,19 @@ impl Handler<IndexFile> for IndexerActor {
         }).wait()??;
 
         if let Some(_) = photo_id {
+            debug!("Already in index.");
             return Ok(());
         }
 
         debug!("Generating thumbnails...");
+        let hash = Photo::compute_hash(&msg.path)?;
+
         PhotoThumbnail::create_image(&msg.path, ThumbnailSize::Small, &self.config)?;
         PhotoThumbnail::create_image(&msg.path, ThumbnailSize::Medium, &self.config)?;
 
         let mut photo = Photo {
             name,
+            hash,
             album_id: msg.parent,
             ..Default::default()
         };

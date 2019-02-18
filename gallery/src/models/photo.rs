@@ -1,6 +1,10 @@
+use std::{fs, io};
+use std::path::PathBuf;
+
 use actix_web::actix::{Addr, Message};
 use futures::future::Future;
 use askama::Template;
+use sha2::{Sha256, Digest};
 
 use gallery_derive::ExifExtractor;
 use super::db::DbExecutor;
@@ -46,41 +50,6 @@ pub struct Photo {
     pub flash: Option<String>,
 }
 
-pub struct CreatePhoto {
-    pub photo: Photo,
-}
-
-pub struct GetPhoto {
-    pub name: String,
-    pub album_id: String,
-}
-
-pub struct GetPhotoId {
-    pub name: String,
-    pub album_id: String,
-}
-
-pub struct GetAdjacentPhotos {
-    pub name: String,
-    pub album_id: String,
-}
-
-impl Message for CreatePhoto {
-    type Result = Result<String, GalleryError>;
-}
-
-impl Message for GetPhoto {
-    type Result = Result<Photo, GalleryError>;
-}
-
-impl Message for GetPhotoId {
-    type Result = Result<Option<String>, GalleryError>;
-}
-
-impl Message for GetAdjacentPhotos {
-    type Result = Result<(Option<String>, Option<String>), GalleryError>;
-}
-
 impl PhotoTemplate {
     pub fn get(name: String, album_id: String, breadcrumb: Vec<(String, String)>, db: Addr<DbExecutor>)
         -> impl Future<Item = Self, Error = GalleryError>
@@ -117,4 +86,49 @@ impl PhotoTemplate {
                 }
             })
     }
+}
+
+impl Photo {
+    pub fn compute_hash(path: &PathBuf) -> io::Result<String> {
+        let mut hasher = Sha256::new();
+        let mut file = fs::File::open(&path)?;
+        io::copy(&mut file,&mut hasher)?;
+        let hash = format!("{:x}", hasher.result());
+        Ok(hash)
+    }
+}
+
+pub struct CreatePhoto {
+    pub photo: Photo,
+}
+
+pub struct GetPhoto {
+    pub name: String,
+    pub album_id: String,
+}
+
+pub struct GetPhotoId {
+    pub name: String,
+    pub album_id: String,
+}
+
+pub struct GetAdjacentPhotos {
+    pub name: String,
+    pub album_id: String,
+}
+
+impl Message for CreatePhoto {
+    type Result = Result<String, GalleryError>;
+}
+
+impl Message for GetPhoto {
+    type Result = Result<Photo, GalleryError>;
+}
+
+impl Message for GetPhotoId {
+    type Result = Result<Option<String>, GalleryError>;
+}
+
+impl Message for GetAdjacentPhotos {
+    type Result = Result<(Option<String>, Option<String>), GalleryError>;
 }
