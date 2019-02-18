@@ -27,7 +27,7 @@ fn create_app(app_state: AppState) -> App<AppState> {
     App::with_state(app_state)
         .middleware(Logger::new("\"%r\" %Dms %s"))
         .handler("/static", fs::StaticFiles::new(static_path).unwrap())
-        .resource("/{path:.*}/{thumbnail_size}", |r| r.with_async(routes::thumbnail_route))
+        .resource("/{path:.*}/{thumbnail_size:small|medium}", |r| r.with_async(routes::thumbnail_route))
         .resource("/{path:.*}/full", |r| r.f(routes::full_photo_route))
         .resource("/{path:.*}", |r| r.with_async(routes::gallery_route))
         .default_resource(|r| r.h(NormalizePath::default()))
