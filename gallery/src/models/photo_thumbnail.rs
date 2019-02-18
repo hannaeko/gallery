@@ -25,6 +25,11 @@ impl PhotoThumbnail {
     pub fn create_image(path: &PathBuf, hash: &String, thumbnail_config: &ThumbnailConfig, cache_path: String) -> Result<PathBuf, GalleryError> {
         let thumbnail_path = Self::get_image_path(&hash, thumbnail_config, cache_path);
 
+        if thumbnail_path.is_file() {
+            debug!("File {:?} already exists.", thumbnail_path);
+            return Ok(thumbnail_path);
+        }
+
         let ThumbnailConfig { size, square, .. } = *thumbnail_config;
 
         let img = image::open(&path)?;
