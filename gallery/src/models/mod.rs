@@ -8,5 +8,5 @@ pub mod schema;
 
 pub use photo::{Photo, PhotoTemplate};
 pub use album::{Album, AlbumTemplate};
-pub use photo_thumbnail::{PhotoThumbnail, ThumbnailSize};
+pub use photo_thumbnail::PhotoThumbnail;
 pub use album_thumbnail::AlbumThumbnail;

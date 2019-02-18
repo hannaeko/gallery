@@ -2,7 +2,7 @@ use actix_web::{HttpRequest, Result, Either, fs::NamedFile, AsyncResponder, Stat
 use futures::future::{self, Future};
 
 use crate::utils::*;
-use crate::models::{Album, AlbumTemplate, Photo, PhotoTemplate, PhotoThumbnail, ThumbnailSize};
+use crate::models::{Album, AlbumTemplate, Photo, PhotoTemplate, PhotoThumbnail};
 use crate::error::GalleryError;
 use crate::common::AppState;
 
@@ -37,12 +37,18 @@ pub fn gallery_route((req, state): (HttpRequest<AppState>, State<AppState>))
         }).responder()
 }
 
-pub fn small_thumbnail_route((req, state): (HttpRequest<AppState>, State<AppState>)) -> Box<Future<Item = NamedFile, Error = GalleryError>> {
+pub fn thumbnail_route((req, state): (HttpRequest<AppState>, State<AppState>)) -> Box<Future<Item = NamedFile, Error = GalleryError>> {
     let path: std::path::PathBuf = req.match_info().query("path").unwrap();
+    let thumbnail_size: String = req.match_info().query("thumbnail_size").unwrap();
 
     let name = match get_file_name_string(&path) {
         Ok(name) => name,
         Err(e) => return Box::new(future::err(GalleryError::from(e)))
+    };
+
+    let thumbnail_config = match state.config.thumbnails.get(&thumbnail_size) {
+        Some(tb_config) => tb_config.clone(),
+        None => return Box::new(future::err(GalleryError::NotFound))
     };
 
     let cloned_state = state.clone();
@@ -54,7 +60,7 @@ pub fn small_thumbnail_route((req, state): (HttpRequest<AppState>, State<AppStat
         .and_then(move |photo| -> Box<Future<Item = NamedFile, Error = GalleryError>> {
             let res = NamedFile::open(PhotoThumbnail::get_image_path(
                 &photo.hash,
-                ThumbnailSize::Small,
+                &thumbnail_config,
                 &cloned_state.config
             ));
             match res {
@@ -64,18 +70,7 @@ pub fn small_thumbnail_route((req, state): (HttpRequest<AppState>, State<AppStat
         })
         .responder()
 }
-/*
-pub fn medium_thumbnail_route(req: &HttpRequest<AppState>) -> Result<NamedFile> {
-    let state = req.state();
-    let path = get_album_canonical_path(req.match_info().query("path")?, &state.config);
 
-    Ok(NamedFile::open(PhotoThumbnail::get_image_path(
-        &path,
-        ThumbnailSize::Medium,
-        &state.config
-    ))?)
-}
-*/
 pub fn full_photo_route(req: &HttpRequest<AppState>) -> Result<NamedFile> {
     let state = req.state();
     let path = get_album_canonical_path(req.match_info().query("path")?, &state.config);

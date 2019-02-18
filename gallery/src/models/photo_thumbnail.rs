@@ -22,10 +22,10 @@ impl Message for GetPhotosThumbnail {
 }
 
 impl PhotoThumbnail {
-    pub fn create_image(path: &PathBuf, hash: &String, thumbnail_size: ThumbnailSize, config: &Config) -> Result<PathBuf, GalleryError> {
-        let ThumbnailConfig { size, square, .. } = *thumbnail_size.get_thumbnail_config(config);
+    pub fn create_image(path: &PathBuf, hash: &String, thumbnail_config: &ThumbnailConfig, config: &Config) -> Result<PathBuf, GalleryError> {
+        let thumbnail_path = Self::get_image_path(&hash, thumbnail_config, &config);
 
-        let thumbnail_path = Self::get_image_path(&hash, thumbnail_size, &config);
+        let ThumbnailConfig { size, square, .. } = *thumbnail_config;
 
         let img = image::open(&path)?;
         let (width, height) = img.dimensions();
@@ -44,25 +44,11 @@ impl PhotoThumbnail {
         Ok(thumbnail_path)
     }
 
-    pub fn get_image_path(hash: &String, thumbnail_size: ThumbnailSize, config: &Config) -> PathBuf {
-        let ThumbnailConfig { extension, .. } = thumbnail_size.get_thumbnail_config(config);
+    pub fn get_image_path(hash: &String, thumbnail_config: &ThumbnailConfig, config: &Config) -> PathBuf {
+        let extension = &thumbnail_config.extension;
 
         let mut thumbnail_path = PathBuf::from(&config.cache_path);
         thumbnail_path.push(hash);
         thumbnail_path.with_extension(extension)
-    }
-}
-
-pub enum ThumbnailSize {
-    Small,
-    Medium,
-}
-
-impl ThumbnailSize {
-    pub fn get_thumbnail_config<'a>(&self, config: &'a Config) -> &'a ThumbnailConfig {
-        match self {
-            ThumbnailSize::Small => &config.small_thumbnail,
-            ThumbnailSize::Medium => &config.medium_thumbnail,
-        }
     }
 }

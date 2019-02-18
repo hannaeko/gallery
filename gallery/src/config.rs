@@ -1,12 +1,12 @@
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
-use std::collections::HashSet;
+use std::collections::{HashSet, HashMap};
 
 use toml;
 use serde::Deserialize;
 
-#[derive(Deserialize, Clone)]
+#[derive(Deserialize, Clone, Debug)]
 pub struct ThumbnailConfig {
     pub size: u32,
     pub square: bool,
@@ -27,8 +27,7 @@ pub struct Config {
 
     pub allowed_extensions: HashSet<String>,
 
-    pub small_thumbnail: ThumbnailConfig,
-    pub medium_thumbnail: ThumbnailConfig,
+    pub thumbnails: HashMap<String, ThumbnailConfig>,
 
     pub db: DbConfig,
 }

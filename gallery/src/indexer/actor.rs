@@ -8,7 +8,7 @@ use futures::future::Future;
 use crate::models::db::DbExecutor;
 use crate::models::album::{CreateAlbum, GetAlbumId, GetRootAlbumId};
 use crate::models::photo::{Photo, GetPhotoId, CreatePhoto};
-use crate::models::photo_thumbnail::{PhotoThumbnail, ThumbnailSize};
+use crate::models::photo_thumbnail::PhotoThumbnail;
 use crate::models::helper::ExifExtractor;
 use crate::indexer::messages::*;
 use crate::error::GalleryError;
@@ -140,8 +140,9 @@ impl Handler<IndexFile> for IndexerActor {
         debug!("Generating thumbnails...");
         let hash = Photo::compute_hash(&msg.path)?;
 
-        PhotoThumbnail::create_image(&msg.path, &hash, ThumbnailSize::Small, &self.config)?;
-        PhotoThumbnail::create_image(&msg.path, &hash, ThumbnailSize::Medium, &self.config)?;
+        for (_, thumbnail_config) in &self.config.thumbnails {
+            PhotoThumbnail::create_image(&msg.path, &hash, &thumbnail_config, &self.config)?;
+        }
 
         let mut photo = Photo {
             name,
