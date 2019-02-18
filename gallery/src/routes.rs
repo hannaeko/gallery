@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use actix_web::{HttpRequest, Result, Either, fs::NamedFile, AsyncResponder, State};
 use futures::future::{self, Future};
 
@@ -10,7 +12,7 @@ use crate::common::AppState;
 pub fn gallery_route((req, state): (HttpRequest<AppState>, State<AppState>))
     -> Box<Future<Item = Either<AlbumTemplate, PhotoTemplate>, Error = GalleryError>>
 {
-    let path: std::path::PathBuf = req.match_info().query("path").unwrap();
+    let path: PathBuf = req.match_info().query("path").unwrap();
     AlbumTemplate::get(path.clone(), state.db.clone())
         .map(|album| Either::A(album))
         .or_else(move |err| -> Box<Future<Item = Either<AlbumTemplate, PhotoTemplate>, Error = GalleryError>> {
@@ -38,7 +40,7 @@ pub fn gallery_route((req, state): (HttpRequest<AppState>, State<AppState>))
 }
 
 pub fn thumbnail_route((req, state): (HttpRequest<AppState>, State<AppState>)) -> Box<Future<Item = NamedFile, Error = GalleryError>> {
-    let path: std::path::PathBuf = req.match_info().query("path").unwrap();
+    let path: PathBuf = req.match_info().query("path").unwrap();
     let thumbnail_size: String = req.match_info().query("thumbnail_size").unwrap();
 
     let name = match get_file_name_string(&path) {
@@ -51,7 +53,7 @@ pub fn thumbnail_route((req, state): (HttpRequest<AppState>, State<AppState>)) -
         None => return Box::new(future::err(GalleryError::NotFound))
     };
 
-    let cloned_state = state.clone();
+    let cache_path = state.config.cache_path.clone();
 
     Album::get(path.parent().unwrap().to_path_buf(), state.db.clone())
         .and_then(move |result| {
@@ -61,7 +63,7 @@ pub fn thumbnail_route((req, state): (HttpRequest<AppState>, State<AppState>)) -
             let res = NamedFile::open(PhotoThumbnail::get_image_path(
                 &photo.hash,
                 &thumbnail_config,
-                &cloned_state.config
+                cache_path
             ));
             match res {
                 Ok(res) => Box::new(future::result(Ok(res))),

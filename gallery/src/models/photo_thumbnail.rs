@@ -4,7 +4,7 @@ use std::path::PathBuf;
 use image::GenericImageView;
 use actix_web::actix::Message;
 
-use crate::config::{Config, ThumbnailConfig};
+use crate::config::ThumbnailConfig;
 use crate::error::GalleryError;
 
 #[derive(Debug, Queryable)]
@@ -22,8 +22,8 @@ impl Message for GetPhotosThumbnail {
 }
 
 impl PhotoThumbnail {
-    pub fn create_image(path: &PathBuf, hash: &String, thumbnail_config: &ThumbnailConfig, config: &Config) -> Result<PathBuf, GalleryError> {
-        let thumbnail_path = Self::get_image_path(&hash, thumbnail_config, &config);
+    pub fn create_image(path: &PathBuf, hash: &String, thumbnail_config: &ThumbnailConfig, cache_path: String) -> Result<PathBuf, GalleryError> {
+        let thumbnail_path = Self::get_image_path(&hash, thumbnail_config, cache_path);
 
         let ThumbnailConfig { size, square, .. } = *thumbnail_config;
 
@@ -44,10 +44,11 @@ impl PhotoThumbnail {
         Ok(thumbnail_path)
     }
 
-    pub fn get_image_path(hash: &String, thumbnail_config: &ThumbnailConfig, config: &Config) -> PathBuf {
+    pub fn get_image_path(hash: &String, thumbnail_config: &ThumbnailConfig, cache_path: String) -> PathBuf {
         let extension = &thumbnail_config.extension;
 
-        let mut thumbnail_path = PathBuf::from(&config.cache_path);
+        let mut thumbnail_path = PathBuf::from(cache_path);
+
         thumbnail_path.push(hash);
         thumbnail_path.with_extension(extension)
     }
