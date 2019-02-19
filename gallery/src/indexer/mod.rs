@@ -1,4 +1,2 @@
-pub mod actor;
-pub mod messages;
-
-pub use actor::*;
+pub mod indexer_actor;
+pub mod walker_actor;

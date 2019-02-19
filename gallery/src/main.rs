@@ -40,12 +40,13 @@ fn main() {
 
     let config = Config::load();
     let db_addr = models::db::init(config.db.url.clone());
-    let index_addr = indexer::init(db_addr.clone(), config.clone());
+    let index_addr = indexer::indexer_actor::IndexerActor::init(db_addr.clone(), config.clone());
+    let walker_addr = indexer::walker_actor::WalkerActor::init(db_addr.clone(), index_addr.clone(), config.clone());
 
     let app_state = AppState {
         config: config.clone(),
         db: db_addr,
-        indexer: index_addr.clone()
+        walker: walker_addr.clone()
     };
 
     server::new(move || create_app(app_state.clone()))
@@ -53,10 +54,7 @@ fn main() {
         .unwrap()
         .start();
 
-    index_addr.do_send(indexer::messages::StartIndexing {
-        storage_path: config.storage_path,
-        indexer: index_addr.clone(),
-    });
+    walker_addr.do_send(indexer::walker_actor::StartWalking);
 
     let _ = sys.run();
 }
