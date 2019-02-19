@@ -8,7 +8,8 @@ use std::path::Path;
 use env_logger;
 use actix_web::middleware::Logger;
 use actix_web::{server, App, http::NormalizePath, fs};
-use actix_web::actix::System;
+use actix_web::actix::{System, Arbiter};
+use futures::future::Future;
 
 mod models;
 mod utils;
@@ -45,7 +46,7 @@ fn main() {
 
     let app_state = AppState {
         config: config.clone(),
-        db: db_addr,
+        db: db_addr.clone(),
         walker: walker_addr.clone()
     };
 
@@ -54,7 +55,18 @@ fn main() {
         .unwrap()
         .start();
 
-    walker_addr.do_send(indexer::walker_actor::StartWalking);
+    let res = db_addr.send(models::job::CreateJob {
+        name: "index_gallery".to_string(),
+        state: "created".to_string()
+    }).from_err::<error::GalleryError>()
+        .flatten()
+        .and_then(move |job_id| {
+            walker_addr.send(indexer::walker_actor::StartWalking { job_id })
+                .from_err::<error::GalleryError>()
+                .flatten()
+        })
+        .map_err(|e| error!("{}", e));
+    Arbiter::spawn(res);
 
     let _ = sys.run();
 }

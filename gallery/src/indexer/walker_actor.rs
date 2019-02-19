@@ -5,6 +5,7 @@ use actix_web::actix::{Actor, Addr, Arbiter, Context, Handler, Message};
 use futures::future::{Future, join_all};
 
 use crate::models::album::{CreateAlbum, GetAlbumId, GetRootAlbumId};
+use crate::models::job::ChangeState;
 use crate::models::db::DbExecutor;
 use crate::config::Config;
 use crate::error::GalleryError;
@@ -85,7 +86,9 @@ impl WalkerActor {
     }
 }
 
-pub struct StartWalking;
+pub struct StartWalking {
+    pub job_id: String,
+}
 
 impl Message for StartWalking {
     type Result = Result<(), GalleryError>;
@@ -94,7 +97,12 @@ impl Message for StartWalking {
 impl Handler<StartWalking> for WalkerActor {
     type Result = Result<(), GalleryError>;
 
-    fn handle(&mut self, _msg: StartWalking, _ctx: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, msg: StartWalking, _ctx: &mut Self::Context) -> Self::Result {
+        self.db.send(ChangeState {
+            job_id: msg.job_id.clone(),
+            new_state: "running".to_string(),
+        }).wait()??;
+
         info!("Starting building index.");
 
         let storage_path = fs::canonicalize(&self.config.storage_path)?;
@@ -108,6 +116,12 @@ impl Handler<StartWalking> for WalkerActor {
 
         self.index_children(storage_path, root_id)?;
         info!("Done!");
+
+        self.db.send(ChangeState {
+            job_id: msg.job_id,
+            new_state: "finished".to_string(),
+        }).wait()??;
+
         Ok(())
     }
 }
