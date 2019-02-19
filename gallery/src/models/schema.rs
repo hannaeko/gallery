@@ -7,6 +7,14 @@ table! {
 }
 
 table! {
+    jobs (id) {
+        id -> Text,
+        name -> Text,
+        state -> Text,
+    }
+}
+
+table! {
     photos (id) {
         id -> Text,
         name -> Text,
@@ -24,5 +32,6 @@ table! {
 
 allow_tables_to_appear_in_same_query!(
     albums,
+    jobs,
     photos,
 );
