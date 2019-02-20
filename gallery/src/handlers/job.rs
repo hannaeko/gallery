@@ -4,7 +4,7 @@ use diesel;
 use diesel::prelude::*;
 
 use crate::models::db::DbExecutor;
-use crate::models::job::{Job, CreateJob, ChangeState};
+use crate::models::job::{Job, CreateJob, ChangeState, GetJobs};
 use crate::error::GalleryError;
 
 impl Handler<CreateJob> for DbExecutor {
@@ -43,5 +43,15 @@ impl Handler<ChangeState> for DbExecutor {
 
         debug!("Changed state of job {:?} to {:?}.", msg.job_id, msg.new_state);
         Ok(())
+    }
+}
+
+impl Handler<GetJobs> for DbExecutor {
+    type Result = Result<Vec<Job>, GalleryError>;
+
+    fn handle(&mut self, _msg: GetJobs, _ctx: &mut Self::Context) -> Self::Result {
+        use crate::models::schema::jobs::dsl::*;
+
+        Ok(jobs.load::<Job>(&self.conn.get().unwrap())?)
     }
 }

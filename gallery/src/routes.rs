@@ -5,6 +5,7 @@ use futures::future::{self, Future};
 
 use crate::utils::*;
 use crate::models::{Album, AlbumTemplate, Photo, PhotoTemplate, PhotoThumbnail};
+use crate::models::job::{GetJobs, JobsTemplate};
 use crate::error::{GalleryError, GalleryInternalError};
 use crate::common::AppState;
 
@@ -72,4 +73,12 @@ pub fn full_photo_route(req: &HttpRequest<AppState>) -> Result<NamedFile> {
     let path = get_album_canonical_path(req.match_info().query("path")?, &state.config);
 
     Ok(NamedFile::open(path)?)
+}
+
+pub fn get_jobs_route((_req, state): (HttpRequest<AppState>, State<AppState>)) -> impl Future<Item = JobsTemplate, Error = GalleryError> {
+    state.db.send(GetJobs).from_err::<GalleryError>()
+        .flatten()
+        .and_then(|jobs| {
+            Ok(JobsTemplate { jobs })
+        })
 }

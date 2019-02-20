@@ -1,0 +1,13 @@
+{% extends "admin_base.html" %}
+
+{% block main %}
+  <table>
+    {% for job in jobs %}
+      <tr>
+        <td>{{ job.id }}</td>
+        <td>{{ job.name }}</td>
+        <td>{{ job.state }}</td>
+      </tr>
+    {% endfor %}
+  </table>
+{% endblock %}

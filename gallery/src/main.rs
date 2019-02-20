@@ -28,6 +28,10 @@ fn create_app(app_state: AppState) -> App<AppState> {
     let static_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("static");
     App::with_state(app_state)
         .middleware(Logger::new("\"%r\" %Dms %s"))
+        .scope("/admin", |admin_scope| {
+            admin_scope
+                .resource("/jobs", |r| r.with_async(routes::get_jobs_route))
+        })
         .handler("/static", fs::StaticFiles::new(static_path).unwrap())
         .resource("/{path:.*}/{thumbnail_size:small|medium}", |r| r.with_async(routes::thumbnail_route))
         .resource("/{path:.*}/full", |r| r.f(routes::full_photo_route))
