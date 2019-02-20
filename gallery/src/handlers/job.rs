@@ -4,7 +4,7 @@ use diesel;
 use diesel::prelude::*;
 
 use crate::models::db::DbExecutor;
-use crate::models::job::{Job, CreateJob, ChangeState, GetJobs};
+use crate::models::job::{Job, CreateJob, ChangeState, GetJobs, self};
 use crate::error::GalleryError;
 
 impl Handler<CreateJob> for DbExecutor {
@@ -18,7 +18,7 @@ impl Handler<CreateJob> for DbExecutor {
         let new_job = Job {
             id: uuid,
             name: msg.name,
-            state: msg.state,
+            state: job::STATE_CREATED.to_string(),
         };
 
         diesel::insert_into(jobs::table)

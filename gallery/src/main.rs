@@ -62,7 +62,6 @@ fn main() {
 
     let res = db_addr.send(models::job::CreateJob {
         name: "index_gallery".to_string(),
-        state: "created".to_string()
     }).from_err::<error::GalleryError>()
         .flatten()
         .and_then(move |job_id| {

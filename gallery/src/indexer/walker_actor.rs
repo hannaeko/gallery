@@ -5,7 +5,7 @@ use actix_web::actix::{Actor, Addr, Arbiter, Context, Handler, Message};
 use futures::future::{Future, join_all};
 
 use crate::models::album::{CreateAlbum, GetAlbumId, GetRootAlbumId};
-use crate::models::job::ChangeState;
+use crate::models::job::{ChangeState, self};
 use crate::models::db::DbExecutor;
 use crate::config::Config;
 use crate::error::GalleryError;
@@ -100,7 +100,7 @@ impl Handler<StartWalking> for WalkerActor {
     fn handle(&mut self, msg: StartWalking, _ctx: &mut Self::Context) -> Self::Result {
         self.db.send(ChangeState {
             job_id: msg.job_id.clone(),
-            new_state: "running".to_string(),
+            new_state: job::STATE_RUNNING.to_string(),
         }).wait()??;
 
         info!("Starting building index.");
@@ -119,7 +119,7 @@ impl Handler<StartWalking> for WalkerActor {
 
         self.db.send(ChangeState {
             job_id: msg.job_id,
-            new_state: "finished".to_string(),
+            new_state: job::STATE_FINISHED.to_string(),
         }).wait()??;
 
         Ok(())

@@ -4,6 +4,10 @@ use askama::Template;
 use super::schema::jobs;
 use crate::error::GalleryError;
 
+pub const STATE_CREATED: &str = "created";
+pub const STATE_RUNNING: &str = "running";
+pub const STATE_FINISHED: &str = "finished";
+
 
 #[derive(Insertable, Queryable)]
 pub struct Job {
@@ -20,7 +24,6 @@ pub struct JobsTemplate {
 
 pub struct CreateJob {
     pub name: String,
-    pub state: String,
 }
 
 pub struct ChangeState {
