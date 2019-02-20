@@ -76,3 +76,8 @@ impl From<MailboxError> for GalleryError {
         GalleryError::InternalError(Box::new(error))
     }
 }
+
+#[allow(non_snake_case)]
+pub fn GalleryInternalError<T: Fail>(e: T) -> GalleryError {
+    GalleryError::InternalError(Box::new(e))
+}

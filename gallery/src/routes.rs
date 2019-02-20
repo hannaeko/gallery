@@ -5,14 +5,14 @@ use futures::future::{self, Future};
 
 use crate::utils::*;
 use crate::models::{Album, AlbumTemplate, Photo, PhotoTemplate, PhotoThumbnail};
-use crate::error::GalleryError;
+use crate::error::{GalleryError, GalleryInternalError};
 use crate::common::AppState;
 
 
 pub fn gallery_route((req, state): (HttpRequest<AppState>, State<AppState>))
     -> Box<Future<Item = Either<AlbumTemplate, PhotoTemplate>, Error = GalleryError>>
 {
-    let path: PathBuf = req.match_info().query("path").unwrap();
+    let path: PathBuf = future_try!(req.match_info().query("path").map_err(GalleryInternalError));
     AlbumTemplate::get(path.clone(), state.db.clone())
         .map(|album| Either::A(album))
         .or_else(move |err| -> Box<Future<Item = Either<AlbumTemplate, PhotoTemplate>, Error = GalleryError>> {
@@ -22,10 +22,7 @@ pub fn gallery_route((req, state): (HttpRequest<AppState>, State<AppState>))
                      ref last_album,
                      ref current_breadcrumb,
                  } if missing_segments == 1 => {
-                    let name = match get_file_name_string(path) {
-                        Ok(name) => name,
-                        Err(e) => return Box::new(future::err(e))
-                    };
+                    let name = future_try!(get_file_name_string(path));
 
                     let res = PhotoTemplate::get(name,
                         last_album.to_owned(),
@@ -39,23 +36,20 @@ pub fn gallery_route((req, state): (HttpRequest<AppState>, State<AppState>))
         }).responder()
 }
 
-pub fn thumbnail_route((req, state): (HttpRequest<AppState>, State<AppState>)) -> Box<Future<Item = NamedFile, Error = GalleryError>> {
-    let path: PathBuf = req.match_info().query("path").unwrap();
-    let thumbnail_size: String = req.match_info().query("thumbnail_size").unwrap();
+pub fn thumbnail_route((req, state): (HttpRequest<AppState>, State<AppState>))
+    -> Box<Future<Item = NamedFile, Error = GalleryError>>
+{
+    let path: PathBuf = future_try!(req.match_info().query("path").map_err(GalleryInternalError));
+    let thumbnail_size: String = future_try!(req.match_info().query("thumbnail_size").map_err(GalleryInternalError));
 
-    let name = match get_file_name_string(&path) {
-        Ok(name) => name,
-        Err(e) => return Box::new(future::err(GalleryError::from(e)))
-    };
+    let name = future_try!(get_file_name_string(&path).map_err(GalleryError::from));
 
-    let thumbnail_config = match state.config.thumbnails.get(&thumbnail_size) {
-        Some(tb_config) => tb_config.clone(),
-        None => return Box::new(future::err(GalleryError::NotFound))
-    };
+    let thumbnail_config = future_try!(state.config.thumbnails.get(&thumbnail_size).ok_or(GalleryError::NotFound)).clone();
 
+    let thumbnail_path = future_try!(path.parent().ok_or(GalleryError::NotFound)).to_path_buf();
     let cache_path = state.config.cache_path.clone();
 
-    Album::get(path.parent().unwrap().to_path_buf(), state.db.clone())
+    Album::get(thumbnail_path, state.db.clone())
         .and_then(move |result| {
             Photo::get(name, result.album.id, state.db.clone())
         })

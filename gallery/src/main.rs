@@ -12,6 +12,7 @@ use actix_web::actix::{System, Arbiter};
 use futures::future::Future;
 
 mod models;
+#[macro_use]
 mod utils;
 mod routes;
 mod config;

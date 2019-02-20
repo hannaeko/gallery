@@ -25,3 +25,12 @@ pub fn trim_one_char(s: String) -> String {
         return s[1..(s.len() - 1)].to_string();
     }
 }
+
+macro_rules! future_try {
+    ($ex:expr) => {
+        match $ex {
+            Ok(res) => res,
+            Err(e) => return Box::new(futures::future::err(e))
+        }
+    };
+}
