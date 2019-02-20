@@ -4,6 +4,7 @@ use std::io;
 use failure::Fail;
 use image::ImageError;
 use diesel::result::Error as DieselError;
+use actix_web::Error as ActixError;
 use actix_web::{ResponseError, HttpResponse};
 use actix_web::actix::MailboxError;
 
@@ -19,12 +20,16 @@ pub enum GalleryError {
     InternalError(Box<Fail>),
     #[fail(display="Database Error: {}", _0)]
     DbError(DieselError),
-    #[fail(display="Album not found, missing segments : {}", missing_segments)]
+    #[fail(display="Album not found, missing segments: {}", missing_segments)]
     AlbumNotFound {
         missing_segments: u8,
         last_album: String,
         current_breadcrumb: Vec<(String, String)>,
-    }
+    },
+    #[fail(display = "Actix Error: {}", _0)]
+    ActixError(ActixError),
+    #[fail(display = "Invalid form submitted, {}", _0)]
+    InvalidForm(&'static str),
 }
 
 impl ResponseError for GalleryError {
@@ -33,6 +38,8 @@ impl ResponseError for GalleryError {
             GalleryError::NotFound | GalleryError::AlbumNotFound { .. } => {
                 HttpResponse::NotFound().content_type("text/html").finish()
             },
+            GalleryError::InvalidForm(msg) => HttpResponse::BadRequest().body(msg),
+            GalleryError::ActixError(ref e) => e.as_response_error().error_response(),
             _ => HttpResponse::InternalServerError().content_type("text/html").finish()
         }
     }
@@ -74,6 +81,12 @@ impl From<DieselError> for GalleryError {
 impl From<MailboxError> for GalleryError {
     fn from(error: MailboxError) -> Self {
         GalleryError::InternalError(Box::new(error))
+    }
+}
+
+impl From<ActixError> for GalleryError {
+    fn from(error: ActixError) -> Self {
+        GalleryError::ActixError(error)
     }
 }
 

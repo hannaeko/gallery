@@ -1,13 +1,14 @@
 use std::path::PathBuf;
 
-use actix_web::{HttpRequest, Result, Either, fs::NamedFile, AsyncResponder, State};
+use actix_web::{HttpRequest, HttpResponse, Result, Either, fs::NamedFile, AsyncResponder, State, HttpMessage};
 use futures::future::{self, Future};
 
 use crate::utils::*;
 use crate::models::{Album, AlbumTemplate, Photo, PhotoTemplate, PhotoThumbnail};
-use crate::models::job::{GetJobs, JobsTemplate};
+use crate::models::job::{GetJobs, CreateJob, JobsTemplate};
 use crate::error::{GalleryError, GalleryInternalError};
 use crate::common::AppState;
+use crate::indexer::walker_actor::StartWalking;
 
 
 pub fn gallery_route((req, state): (HttpRequest<AppState>, State<AppState>))
@@ -81,4 +82,27 @@ pub fn get_jobs_route((_req, state): (HttpRequest<AppState>, State<AppState>)) -
         .and_then(|jobs| {
             Ok(JobsTemplate { jobs })
         })
+}
+
+pub fn post_jobs_route((req, state): (HttpRequest<AppState>, State<AppState>)) -> Box<Future<Item = HttpResponse, Error = GalleryError>> {
+    let walker_addr = state.walker.clone();
+
+    req.urlencoded::<CreateJob>()
+        .map_err(|e| GalleryError::ActixError(e.into()))
+        .and_then(|create_job| {
+            match create_job.name.as_ref() {
+                "index_gallery" => Ok(create_job),
+                _ => Err(GalleryError::InvalidForm("\"name\" field value is invalid."))
+            }
+        })
+        .and_then(move |create_job| {
+            state.db.send(create_job)
+                .from_err::<GalleryError>()
+                .flatten()
+        })
+        .and_then(move |job_id| {
+            walker_addr.do_send(StartWalking { job_id: job_id.clone() });
+            future::ok(HttpResponse::Created().body(job_id).into())
+        })
+        .responder()
 }

@@ -22,6 +22,7 @@ pub struct JobsTemplate {
     pub jobs: Vec<Job>,
 }
 
+#[derive(Debug, Deserialize)]
 pub struct CreateJob {
     pub name: String,
 }

@@ -1,15 +1,13 @@
-#[macro_use]
-extern crate log;
-#[macro_use]
-extern crate diesel;
+#[macro_use] extern crate log;
+#[macro_use] extern crate diesel;
+#[macro_use] extern crate serde;
 
 use std::path::Path;
 
 use env_logger;
 use actix_web::middleware::Logger;
-use actix_web::{server, App, http::NormalizePath, fs};
-use actix_web::actix::{System, Arbiter};
-use futures::future::Future;
+use actix_web::{server, App, http::{NormalizePath, Method}, fs};
+use actix_web::actix::System;
 
 mod models;
 #[macro_use]
@@ -30,7 +28,10 @@ fn create_app(app_state: AppState) -> App<AppState> {
         .middleware(Logger::new("\"%r\" %Dms %s"))
         .scope("/admin", |admin_scope| {
             admin_scope
-                .resource("/jobs", |r| r.with_async(routes::get_jobs_route))
+                .resource("/jobs", |r| {
+                    r.method(Method::GET).with_async(routes::get_jobs_route);
+                    r.method(Method::POST).with_async(routes::post_jobs_route)
+                })
         })
         .handler("/static", fs::StaticFiles::new(static_path).unwrap())
         .resource("/{path:.*}/{thumbnail_size:small|medium}", |r| r.with_async(routes::thumbnail_route))
@@ -50,27 +51,15 @@ fn main() {
     let walker_addr = indexer::walker_actor::WalkerActor::init(db_addr.clone(), index_addr.clone(), config.clone());
 
     let app_state = AppState {
-        config: config.clone(),
-        db: db_addr.clone(),
-        walker: walker_addr.clone()
+        config: config,
+        db: db_addr,
+        walker: walker_addr
     };
 
     server::new(move || create_app(app_state.clone()))
         .bind("127.0.0.1:3000")
         .unwrap()
         .start();
-
-    let res = db_addr.send(models::job::CreateJob {
-        name: "index_gallery".to_string(),
-    }).from_err::<error::GalleryError>()
-        .flatten()
-        .and_then(move |job_id| {
-            walker_addr.send(indexer::walker_actor::StartWalking { job_id })
-                .from_err::<error::GalleryError>()
-                .flatten()
-        })
-        .map_err(|e| error!("{}", e));
-    Arbiter::spawn(res);
 
     let _ = sys.run();
 }
