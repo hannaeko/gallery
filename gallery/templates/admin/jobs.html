@@ -1,13 +1,35 @@
 {% extends "admin_base.html" %}
 
 {% block main %}
-  <table>
-    {% for job in jobs %}
-      <tr>
-        <td>{{ job.id }}</td>
-        <td>{{ job.name }}</td>
-        <td>{{ job.state }}</td>
-      </tr>
-    {% endfor %}
-  </table>
+  <section>
+    <h2>Create a new job</h2>
+    <form method="POST" action="/admin/jobs">
+      <label for="name">Job type: </label>
+      <select id="name" name="name">
+        <option value="index_gallery">Index the gallery</option>
+      </select>
+      <input type="submit" value="Go!">
+    </form>
+  </section>
+  <section>
+    <h2>Jobs list</h2>
+    <table class="jobs">
+      <thead>
+        <tr>
+          <th>Job ID</th>
+          <th>Name</th>
+          <th>State</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for job in jobs %}
+          <tr>
+            <td>{{ job.id }}</td>
+            <td>{{ job.name }}</td>
+            <td>{{ job.state }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
 {% endblock %}

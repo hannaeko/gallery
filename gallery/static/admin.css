@@ -1,0 +1,25 @@
+html, body {
+  margin: 0;
+}
+
+main {
+  max-width: 900px;
+  margin: auto;
+}
+
+table.jobs {
+  width: 100%;
+}
+
+table.jobs th, table.jobs td {
+  text-align: left;
+}
+
+table.jobs tr:nth-child(even) {
+  background: #efefef;
+}
+
+table.jobs, table.jobs th, table.jobs td {
+  border: none;
+  border-collapse: collapse;
+}
