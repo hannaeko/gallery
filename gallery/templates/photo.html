@@ -27,9 +27,9 @@
   <div class="metadata-container">
     <h2>Metadata</h2>
     <dl>
-      {% for named_value in photo.get_named_metadata() %}
-        <dt>{{ named_value.0 }}</dt>
-        <dd>{{ named_value.1 }}</dd>
+      {% for (key, value) in photo.get_named_metadata() %}
+        <dt>{{ key }}</dt>
+        <dd>{{ value }}</dd>
       {% endfor %}
     </dl>
   </div>

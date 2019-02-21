@@ -11,8 +11,8 @@
     <header>
       <nav>
         <ul>
-          {% for component in breadcrumb %}
-            <li><a href="{{ component.0 }}">{{ component.1 }}</a></li>
+          {% for (url, current_segment) in breadcrumb %}
+            <li><a href="{{ url }}">{{ current_segment }}</a></li>
           {% endfor %}
           <li><h1>{{ name }}</h1></li>
         </ul>
