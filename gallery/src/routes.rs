@@ -1,5 +1,6 @@
 use std::path::PathBuf;
 
+use askama::Template;
 use actix_web::{HttpRequest, HttpResponse, Result, Either, fs::NamedFile, AsyncResponder, State, HttpMessage};
 use futures::future::{self, Future};
 
@@ -80,12 +81,16 @@ pub fn get_jobs_route((_req, state): (HttpRequest<AppState>, State<AppState>)) -
     state.db.send(GetJobs).from_err::<GalleryError>()
         .flatten()
         .and_then(|jobs| {
-            Ok(JobsTemplate { jobs })
+            Ok(JobsTemplate {
+                new_job_id: None,
+                jobs
+            })
         })
 }
 
 pub fn post_jobs_route((req, state): (HttpRequest<AppState>, State<AppState>)) -> Box<Future<Item = HttpResponse, Error = GalleryError>> {
     let walker_addr = state.walker.clone();
+    let db_addr = state.db.clone();
 
     req.urlencoded::<CreateJob>()
         .map_err(|e| GalleryError::ActixError(e.into()))
@@ -102,7 +107,17 @@ pub fn post_jobs_route((req, state): (HttpRequest<AppState>, State<AppState>)) -
         })
         .and_then(move |job_id| {
             walker_addr.do_send(StartWalking { job_id: job_id.clone() });
-            future::ok(HttpResponse::Created().body(job_id).into())
+            db_addr.send(GetJobs)
+                .from_err::<GalleryError>()
+                .flatten()
+                .join(Ok(job_id))
+        })
+        .and_then(|(jobs, new_job_id)| {
+            let body = future_try!(JobsTemplate {
+                new_job_id: Some(new_job_id),
+                jobs
+            }.render().map_err(GalleryInternalError));
+            Box::new(future::ok(HttpResponse::Created().body(body).into()))
         })
         .responder()
 }

@@ -3,6 +3,13 @@
 {% block main %}
   <section>
     <h2>Create a new job</h2>
+    {% match new_job_id %}
+      {% when Some with (job_id) %}
+        <div class="message success">
+          New job <a href="/admin/jobs/{{ job_id }}">{{ job_id }}</a> successfuly created.
+        </div>
+      {% else %}
+    {% endmatch %}
     <form method="POST" action="/admin/jobs">
       <label for="name">Job type: </label>
       <select id="name" name="name">

@@ -23,3 +23,18 @@ table.jobs, table.jobs th, table.jobs td {
   border: none;
   border-collapse: collapse;
 }
+
+.message {
+  padding: 0.5em;
+  margin: 1em 0;
+  border-radius: 3px;
+}
+
+.message.success {
+  background: #cef6ce;
+}
+
+.message a {
+  font-weight: bold;
+  color: #686868;
+}

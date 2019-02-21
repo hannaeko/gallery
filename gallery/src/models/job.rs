@@ -19,6 +19,7 @@ pub struct Job {
 #[derive(Template)]
 #[template(path = "admin/jobs.html")]
 pub struct JobsTemplate {
+    pub new_job_id: Option<String>,
     pub jobs: Vec<Job>,
 }
 
