@@ -25,7 +25,11 @@
         <div class="mask">
           <div class="info">
             <h2>{{ photo.name }}</h2>
-            <time datetime="{{ photo.creation_date.as_ref().unwrap() }}">{{ photo.creation_date.as_ref().unwrap() }}</time>
+            {% match photo.creation_date %}
+              {% when Some with (creation_date) %}
+                <time datetime="{{ creation_date }}">{{ creation_date }}</time>
+              {% else %}
+            {% endmatch %}
           </div>
         </div>
       </div>

@@ -6,23 +6,25 @@
 
 {% block main %}
   <div class="photo-container">
-    {% if previous_photo.is_some() %}
-      <a aria-label="Previous photo" title="Go to previous photo" class="previous" href="{{ album_path }}/{{ previous_photo.as_ref().unwrap() }}">
-        <span><i class="fa fa-chevron-left" aria-hidden="true"></i></span>
-      </a>
-    {% else %}
-      <span class="previous"></span>
-    {% endif %}
+    {% match previous_photo %}
+      {% when Some with (previous_photo) %}
+        <a aria-label="Previous photo" title="Go to previous photo" class="previous" href="{{ album_path }}/{{ previous_photo }}">
+          <span><i class="fa fa-chevron-left" aria-hidden="true"></i></span>
+        </a>
+      {% else %}
+        <span class="previous"></span>
+    {% endmatch %}
 
     <img src="{{album_path}}/{{photo.name}}/medium">
 
-    {% if next_photo.is_some() %}
-      <a aria-label="Next photo" title="Go to next photo" class="next" href="{{ album_path }}/{{ next_photo.as_ref().unwrap() }}">
-        <span><i class="fa fa-chevron-right" aria-hidden="true"></i></span>
-      </a>
-    {% else %}
-      <span class="next"></span>
-    {% endif %}
+    {% match next_photo %}
+      {% when Some with (next_photo) %}
+        <a aria-label="Next photo" title="Go to next photo" class="next" href="{{ album_path }}/{{ next_photo }}">
+          <span><i class="fa fa-chevron-right" aria-hidden="true"></i></span>
+        </a>
+      {% else %}
+        <span class="next"></span>
+    {% endmatch %}
   </div>
   <div class="metadata-container">
     <h2>Metadata</h2>
